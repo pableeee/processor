@@ -10,7 +10,7 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
-func handleGet(api infra.Backend, w http.ResponseWriter, r *http.Request) error {
+func handleGet(api infra.Repository, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	if vars == nil {
 		return fmt.Errorf("owner is missin")
@@ -38,7 +38,7 @@ func handleGet(api infra.Backend, w http.ResponseWriter, r *http.Request) error 
 	return nil
 }
 
-func handlePost(api infra.Backend, w http.ResponseWriter, r *http.Request) error {
+func handlePost(api infra.Repository, w http.ResponseWriter, r *http.Request) error {
 
 	d := json.NewDecoder(r.Body)
 	s := infra.Server{}

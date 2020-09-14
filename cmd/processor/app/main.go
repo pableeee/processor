@@ -13,7 +13,7 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
-func getInfra() infra.Backend {
+func getInfra() infra.Repository {
 	return infra.MakeLocalInfra()
 }
 
@@ -71,13 +71,13 @@ func handleSignals() <-chan struct{} {
 func Run() error {
 	srv := makeServer()
 
+	c := handleSignals()
 	// start listening
 	err := srv.ListenAndServe()
 	if err != nil {
 		return err
 	}
 
-	c := handleSignals()
 	// waiting for server to shutdown
 	<-c
 

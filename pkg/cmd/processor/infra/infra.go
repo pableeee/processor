@@ -1,6 +1,12 @@
 package infra
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/pableeee/processor/pkg/cmd/k8s"
+)
 
 // Server represents a game server
 type Server struct {
@@ -11,7 +17,35 @@ type Server struct {
 }
 
 // Backend represents the backend server storing
-type Backend interface {
+type Repository interface {
 	Get(userID string) ([]Server, error)
 	Put(userID string, s Server) error
+}
+
+type Infra struct {
+	kvs Repository
+	dm  k8s.DeploymentManager
+}
+
+func (i *Infra) CreateService(userID, game string) error {
+	uuid := uuid.New()
+	_, err := i.dm.CreateDeployment("", "default", game, uuid.String())
+	if err != nil {
+		return fmt.Errorf("error creating resource: %s", err.Error())
+	}
+
+	s := Server{Game: game, CreatedAt: time.Now(), GameID: uuid.String(), Owner: userID}
+	k := fmt.Sprintf("%s:%s", s.Owner, s.GameID)
+
+	err = i.kvs.Put(k, s)
+	if err != nil {
+		return fmt.Errorf("error on kvs put: %s", err.Error())
+	}
+
+	return nil
+}
+
+func (i *Infra) DeleteService(gameID string) error {
+	i.kvs.Get(gameID)
+	return nil
 }
