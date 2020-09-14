@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
-func hangleGet(api infra.Backend, w http.ResponseWriter, r *http.Request) error {
+func handleGet(api infra.Backend, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	if vars == nil {
 		return fmt.Errorf("owner is missin")
@@ -33,6 +34,25 @@ func hangleGet(api infra.Backend, w http.ResponseWriter, r *http.Request) error 
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, b.String())
+
+	return nil
+}
+
+func handlePost(api infra.Backend, w http.ResponseWriter, r *http.Request) error {
+
+	d := json.NewDecoder(r.Body)
+	s := infra.Server{}
+
+	err := d.Decode(&s)
+
+	if err != nil {
+		return fmt.Errorf("could not decode mesage")
+	}
+
+	err = api.Put(s.Owner, s)
+	if err != nil {
+		return fmt.Errorf("coulnd update servers for user:%s", s.Owner)
+	}
 
 	return nil
 }

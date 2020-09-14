@@ -17,17 +17,31 @@ func getInfra() infra.Backend {
 	return infra.MakeLocalInfra()
 }
 
-func makeServer() *http.Server {
+func addHandlers(r *mux.Router) {
 	i := getInfra()
-	r := mux.NewRouter()
 
+	// handles get games requests
 	r.HandleFunc("/game/{userID}", func(w http.ResponseWriter, r *http.Request) {
-		err := hangleGet(i, w, r)
+		err := handleGet(i, w, r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err.Error())
 		}
-	})
+	}).Methods("GET")
+
+	// handles post to add new games
+	r.HandleFunc("/game/", func(w http.ResponseWriter, r *http.Request) {
+		err := handlePost(i, w, r)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err.Error())
+		}
+	}).Methods("POST")
+}
+
+func makeServer() *http.Server {
+	r := mux.NewRouter()
+	addHandlers(r)
 
 	srv := &http.Server{
 		Handler: r,
@@ -43,7 +57,7 @@ func makeServer() *http.Server {
 func handleSignals() <-chan struct{} {
 	c := make(chan struct{})
 	go func() {
-		s := make(chan os.Signal)
+		s := make(chan os.Signal, 1)
 		signal.Notify(s, os.Interrupt, syscall.SIGTERM)
 		// waiting for SIGTERM, to stop de server
 		<-s
