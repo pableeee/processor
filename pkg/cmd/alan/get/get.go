@@ -18,9 +18,9 @@ func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Args:    cobra.ExactArgs(1),
 		Use:     "get",
-		Short:   "Get all games asociated with a user",
+		Short:   "Gets all games asociated with a user",
 		Long:    "Get all games asociated with a user",
-		Example: "alan get some-user",
+		Example: "alan get pableeee",
 		RunE:    runGet,
 	}
 

@@ -3,6 +3,8 @@ module github.com/pableeee/processor
 go 1.14
 
 require (
+	github.com/Lukaesebrot/dgc v1.0.6
+	github.com/bwmarrin/discordgo v0.22.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.11 // indirect
