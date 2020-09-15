@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/pableeee/processor/pkg/internal/kvs"
 )
@@ -16,7 +15,6 @@ var (
 // GameKVS for local tests
 type GameKVS struct {
 	kvs kvs.KVS
-	mux *sync.Mutex
 }
 
 // Get implements a local get service
@@ -25,9 +23,7 @@ func (infra *GameKVS) Get(gameID string) (Server, error) {
 		return Server{}, fmt.Errorf("invalid game id")
 	}
 
-	infra.mux.Lock()
 	b, err := infra.kvs.Get(gameID)
-	infra.mux.Unlock()
 	if err == kvs.KeyNotFound {
 		return Server{}, nil
 	} else if err != nil {
@@ -59,10 +55,7 @@ func (infra *GameKVS) Put(gameID string, s Server) error {
 		return err
 	}
 
-	infra.mux.Lock()
 	err = infra.kvs.Put(gameID, b)
-	infra.mux.Unlock()
-
 	if err != nil {
 		fmt.Printf("error in kvs put for game: %s", err.Error())
 
@@ -77,9 +70,6 @@ func (infra *GameKVS) Del(gameID string) error {
 	if len(gameID) == 0 {
 		return fmt.Errorf("invalid game id")
 	}
-
-	infra.mux.Lock()
-	defer infra.mux.Unlock()
 
 	err := infra.kvs.Del(gameID)
 	if err != nil {
@@ -97,7 +87,6 @@ func MakeLocalGameRepository() *GameKVS {
 // MakeGameKVS makes an instances of a local infra
 func makeGameKVS(kvs kvs.KVS) *GameKVS {
 	instance := new(GameKVS)
-	instance.mux = &sync.Mutex{}
 	instance.kvs = kvs
 
 	return instance

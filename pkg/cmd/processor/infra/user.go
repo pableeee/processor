@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/pableeee/processor/pkg/internal/kvs"
 )
@@ -12,7 +11,6 @@ import (
 // UserKVS for local tests
 type UserKVS struct {
 	kvs kvs.KVS
-	mux *sync.Mutex
 }
 
 var (
@@ -25,9 +23,7 @@ func (infra *UserKVS) Get(userID string) ([]string, error) {
 		return []string{}, fmt.Errorf("invalid game id")
 	}
 
-	infra.mux.Lock()
 	b, err := infra.kvs.Get(userID)
-	infra.mux.Unlock()
 
 	if err == kvs.KeyNotFound {
 		return []string{}, UserNotFound
@@ -60,9 +56,6 @@ func (infra *UserKVS) Put(userID string, IDs []string) error {
 		return err
 	}
 
-	infra.mux.Lock()
-	defer infra.mux.Unlock()
-
 	err = infra.kvs.Put(userID, b)
 	if err != nil {
 		fmt.Printf("error in kvs put for game: %s", err.Error())
@@ -78,9 +71,6 @@ func (infra *UserKVS) Del(userID string) error {
 	if len(userID) == 0 {
 		return fmt.Errorf("invalid game id")
 	}
-
-	infra.mux.Lock()
-	defer infra.mux.Unlock()
 
 	err := infra.kvs.Del(userID)
 	if err != nil {
@@ -98,7 +88,6 @@ func MakeLocalUserRepository() *UserKVS {
 // MakeUserKVS makes an userInstances of a local infra
 func makeUserKVS(kvs kvs.KVS) *UserKVS {
 	userInstance := new(UserKVS)
-	userInstance.mux = &sync.Mutex{}
 	userInstance.kvs = kvs
 	return userInstance
 }
