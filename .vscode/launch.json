@@ -28,7 +28,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/bot",
-            "env": {"TOKEN":"NjE5Nzc3OTM3Njc1MTI0NzQ2.XXNLLw.nXwuxu5XbtOYnfZ4XIjUY7ubG1w"},
+            "env": {"TOKEN":"???"},
             "args": []
         },
         {
