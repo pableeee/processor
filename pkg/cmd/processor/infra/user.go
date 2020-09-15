@@ -2,20 +2,22 @@ package infra
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/pableeee/processor/pkg/internal/kvs"
 )
-
-var userInstance *UserKVS
 
 // UserKVS for local tests
 type UserKVS struct {
 	kvs kvs.KVS
 	mux *sync.Mutex
 }
+
+var (
+	UserNotFound = errors.New("User not found")
+)
 
 // Get implements a local get service
 func (infra *UserKVS) Get(userID string) ([]string, error) {
@@ -27,15 +29,17 @@ func (infra *UserKVS) Get(userID string) ([]string, error) {
 	b, err := infra.kvs.Get(userID)
 	infra.mux.Unlock()
 
-	if err != nil {
-		log.Fatalf("could not retieve game from local repository: %s", err.Error())
+	if err == kvs.KeyNotFound {
+		return []string{}, UserNotFound
+	} else if err != nil {
+		fmt.Printf("could not retieve game from local repository: %s", err.Error())
 		return []string{}, err
 	}
 
 	var s []string
 	err = json.Unmarshal(b, &s)
 	if err != nil {
-		log.Fatalf("unable to unmarshall object from kvs: %s", err.Error())
+		fmt.Printf("unable to unmarshall object from kvs: %s", err.Error())
 		return []string{}, err
 	}
 
@@ -51,7 +55,7 @@ func (infra *UserKVS) Put(userID string, IDs []string) error {
 
 	b, err := json.Marshal(&IDs)
 	if err != nil {
-		log.Fatalf("error mashalling the games: %s", err.Error())
+		fmt.Printf("error mashalling the games: %s", err.Error())
 
 		return err
 	}
@@ -61,7 +65,7 @@ func (infra *UserKVS) Put(userID string, IDs []string) error {
 
 	err = infra.kvs.Put(userID, b)
 	if err != nil {
-		log.Fatalf("error in kvs put for game: %s", err.Error())
+		fmt.Printf("error in kvs put for game: %s", err.Error())
 
 		return err
 	}
@@ -80,7 +84,7 @@ func (infra *UserKVS) Del(userID string) error {
 
 	err := infra.kvs.Del(userID)
 	if err != nil {
-		log.Fatalf("could not delete games from repository: %s", err.Error())
+		fmt.Printf("could not delete games from repository: %s", err.Error())
 		return err
 	}
 
@@ -93,11 +97,8 @@ func MakeLocalUserRepository() *UserKVS {
 
 // MakeUserKVS makes an userInstances of a local infra
 func makeUserKVS(kvs kvs.KVS) *UserKVS {
-	if userInstance == nil {
-		userInstance = new(UserKVS)
-		userInstance.mux = &sync.Mutex{}
-		userInstance.kvs = kvs
-	}
-
+	userInstance := new(UserKVS)
+	userInstance.mux = &sync.Mutex{}
+	userInstance.kvs = kvs
 	return userInstance
 }

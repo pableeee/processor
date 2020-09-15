@@ -66,7 +66,7 @@ func Main() {
 		PingHandler: func(ctx *dgc.Ctx) {
 			err := ctx.RespondText("Pong!")
 			if err != nil {
-				log.Fatalf("error Writing pong: %s", err.Error())
+				fmt.Printf("error Writing pong: %s", err.Error())
 			}
 		},
 	})
@@ -113,7 +113,7 @@ func Main() {
 		RateLimiter: dgc.NewRateLimiter(5*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
 			err := ctx.RespondText("You are being rate limited!")
 			if err != nil {
-				log.Fatalf("error limitin rate: %s", err.Error())
+				fmt.Printf("error limitin rate: %s", err.Error())
 			}
 		}),
 
@@ -129,7 +129,7 @@ func objCommand(ctx *dgc.Ctx) {
 	write := func(ctx *dgc.Ctx, msg string) {
 		err := ctx.RespondText(msg)
 		if err != nil {
-			log.Fatalf("error writing get response: %s", err.Error())
+			fmt.Printf("error writing get response: %s", err.Error())
 		}
 	}
 	// Respond with the just set custom object

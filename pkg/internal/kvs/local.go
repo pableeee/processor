@@ -6,8 +6,6 @@ import (
 	"sync"
 )
 
-var instance *LocalKVS
-
 // LocalInfra for local tests
 type LocalKVS struct {
 	db  *map[string][]byte
@@ -25,7 +23,7 @@ func (infra *LocalKVS) Get(k string) ([]byte, error) {
 	infra.mux.Unlock()
 
 	if !found {
-		return nil, fmt.Errorf("key %s not found", k)
+		return nil, KeyNotFound
 	}
 
 	return s, nil
@@ -68,12 +66,10 @@ func (infra *LocalKVS) Del(k string) error {
 
 // MakeLocalInfra makes an instances of a local infra
 func MakeLocalKVS() *LocalKVS {
-	if instance == nil {
-		instance = new(LocalKVS)
-		instance.mux = &sync.Mutex{}
-		m := make(map[string][]byte)
-		instance.db = &m
-	}
+	instance := new(LocalKVS)
+	instance.mux = &sync.Mutex{}
+	m := make(map[string][]byte)
+	instance.db = &m
 
 	return instance
 }

@@ -1,4 +1,4 @@
-package put
+package del
 
 import (
 	"fmt"

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	url = "http://127.0.0.1:8000/game/%s"
+	url = "http://127.0.0.1:8000/user/%s"
 )
 
 // NewCommand returns a new cobra.Command for cluster creation
@@ -36,7 +36,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	}
 
 	resp, err := http.Get(fmt.Sprintf(url, userID))
-	if err != nil || resp.StatusCode != http.StatusCreated {
+	if err != nil || resp.StatusCode != http.StatusOK {
 		return err
 	}
 

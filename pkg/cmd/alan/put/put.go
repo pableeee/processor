@@ -52,7 +52,7 @@ func runPut(cmd *cobra.Command, args []string) error {
 
 	r := bytes.NewReader(j)
 	resp, err := http.Post(url, contentType, r)
-	if err != nil {
+	if err != nil || resp.StatusCode != http.StatusCreated {
 		return err
 	}
 

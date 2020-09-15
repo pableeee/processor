@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -47,7 +46,7 @@ func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) 
 	b.WriteString(fmt.Sprintf("%s has %d active games\n", own, len(srvs)))
 
 	for _, v := range srvs {
-		b.WriteString(fmt.Sprintf("%s\n", v.Game))
+		b.WriteString(fmt.Sprintf("%s - id:%s\n", v.Game, v.GameID))
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, b.String())
@@ -64,28 +63,30 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 	s.GameID = uuid.New().String()
 
 	if err != nil {
-		log.Fatalf("error: %s", err.Error())
+		fmt.Printf("error: %s", err.Error())
 
 		return fmt.Errorf("could not decode mesage")
 	}
 
 	ids, err := rh.userKVS.Get(s.Owner)
-	if err != nil {
-		log.Fatalf("error: %s", err.Error())
+	if err == infra.UserNotFound {
+		ids = make([]string, 0)
+	} else if err != nil {
+		fmt.Printf("error: %s", err.Error())
 		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
 
 	ids = append(ids, s.GameID)
 	err = rh.userKVS.Put(s.Owner, ids)
 	if err != nil {
-		log.Fatalf("error: %s", err.Error())
+		fmt.Printf("error: %s", err.Error())
 
 		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
 
-	err = rh.gameKVS.Put(s.Owner, s)
+	err = rh.gameKVS.Put(s.GameID, s)
 	if err != nil {
-		log.Fatalf("error: %s", err.Error())
+		fmt.Printf("error: %s", err.Error())
 
 		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
@@ -120,12 +121,12 @@ func (rh *requestHandler) handleGameDelete(w http.ResponseWriter, r *http.Reques
 
 	ids, err := rh.userKVS.Get(s.Owner)
 	if err != nil {
-		log.Fatalf("error: %s", err.Error())
+		fmt.Printf("error: %s", err.Error())
 		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
 
 	for i, id := range ids {
-		if id == s.Owner {
+		if id == s.GameID {
 			ids = append(ids[:i], ids[i+1:]...)
 			break
 		}
@@ -133,7 +134,7 @@ func (rh *requestHandler) handleGameDelete(w http.ResponseWriter, r *http.Reques
 
 	err = rh.userKVS.Put(s.Owner, ids)
 	if err != nil {
-		log.Fatalf("error: %s", err.Error())
+		fmt.Printf("error: %s", err.Error())
 
 		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}

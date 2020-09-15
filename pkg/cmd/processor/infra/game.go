@@ -2,14 +2,16 @@ package infra
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/pableeee/processor/pkg/internal/kvs"
 )
 
-var instance *GameKVS
+var (
+	GameNotFound = errors.New("Game not found")
+)
 
 // GameKVS for local tests
 type GameKVS struct {
@@ -26,16 +28,17 @@ func (infra *GameKVS) Get(gameID string) (Server, error) {
 	infra.mux.Lock()
 	b, err := infra.kvs.Get(gameID)
 	infra.mux.Unlock()
-
-	if err != nil {
-		log.Fatalf("could not retieve game from local repository: %s", err.Error())
+	if err == kvs.KeyNotFound {
+		return Server{}, nil
+	} else if err != nil {
+		fmt.Printf("could not retieve game from local repository: %s", err.Error())
 		return Server{}, err
 	}
 
 	var s Server
 	err = json.Unmarshal(b, &s)
 	if err != nil {
-		log.Fatalf("unable to unmarshall object from kvs: %s", err.Error())
+		fmt.Printf("unable to unmarshall object from kvs: %s", err.Error())
 		return Server{}, err
 	}
 
@@ -51,7 +54,7 @@ func (infra *GameKVS) Put(gameID string, s Server) error {
 
 	b, err := json.Marshal(&s)
 	if err != nil {
-		log.Fatalf("error mashalling the game: %s", err.Error())
+		fmt.Printf("error mashalling the game: %s", err.Error())
 
 		return err
 	}
@@ -61,7 +64,7 @@ func (infra *GameKVS) Put(gameID string, s Server) error {
 	infra.mux.Unlock()
 
 	if err != nil {
-		log.Fatalf("error in kvs put for game: %s", err.Error())
+		fmt.Printf("error in kvs put for game: %s", err.Error())
 
 		return err
 	}
@@ -80,7 +83,7 @@ func (infra *GameKVS) Del(gameID string) error {
 
 	err := infra.kvs.Del(gameID)
 	if err != nil {
-		log.Fatalf("could not delete game from repository: %s", err.Error())
+		fmt.Printf("could not delete game from repository: %s", err.Error())
 		return err
 	}
 
@@ -93,11 +96,9 @@ func MakeLocalGameRepository() *GameKVS {
 
 // MakeGameKVS makes an instances of a local infra
 func makeGameKVS(kvs kvs.KVS) *GameKVS {
-	if instance == nil {
-		instance = new(GameKVS)
-		instance.mux = &sync.Mutex{}
-		instance.kvs = kvs
-	}
+	instance := new(GameKVS)
+	instance.mux = &sync.Mutex{}
+	instance.kvs = kvs
 
 	return instance
 }
