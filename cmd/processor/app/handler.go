@@ -6,14 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
 type requestHandler struct {
-	gameKVS *infra.GameKVS
-	userKVS *infra.UserKVS
+	handler infra.RequestHandler
 }
 
 func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) error {
@@ -27,19 +25,9 @@ func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("user id is missing")
 	}
 
-	IDs, err := rh.userKVS.Get(own)
-	if err != nil || len(IDs) == 0 {
-		return fmt.Errorf("coulnd not retrieve games")
-	}
-
-	var srvs []infra.Server
-
-	for _, id := range IDs {
-		s, err := rh.gameKVS.Get(id)
-		if err != nil {
-			return fmt.Errorf("coulnd not retrieve games")
-		}
-		srvs = append(srvs, s)
+	srvs, err := rh.handler.GetServer(own)
+	if err != nil {
+		return fmt.Errorf("error retieving the servers for user %s: %s", own, err.Error())
 	}
 
 	b := strings.Builder{}
@@ -60,7 +48,6 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 	s := infra.Server{}
 
 	err := d.Decode(&s)
-	s.GameID = uuid.New().String()
 
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
@@ -68,31 +55,13 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 		return fmt.Errorf("could not decode mesage")
 	}
 
-	ids, err := rh.userKVS.Get(s.Owner)
-	if err == infra.UserNotFound {
-		ids = make([]string, 0)
-	} else if err != nil {
-		fmt.Printf("error: %s", err.Error())
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
-	}
-
-	ids = append(ids, s.GameID)
-	err = rh.userKVS.Put(s.Owner, ids)
+	gameID, err := rh.handler.CreateServer(s)
 	if err != nil {
-		fmt.Printf("error: %s", err.Error())
-
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
-	}
-
-	err = rh.gameKVS.Put(s.GameID, s)
-	if err != nil {
-		fmt.Printf("error: %s", err.Error())
-
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return fmt.Errorf("could not create server: %s", err.Error())
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, "created")
+	fmt.Fprintf(w, "game %s created\n", gameID)
 
 	return nil
 }
@@ -109,37 +78,12 @@ func (rh *requestHandler) handleGameDelete(w http.ResponseWriter, r *http.Reques
 		return fmt.Errorf("user id is missing")
 	}
 
-	s, err := rh.gameKVS.Get(gameID)
+	err := rh.handler.DeleteServer(gameID)
 	if err != nil {
-		return fmt.Errorf("coulnd get servers for get kvs: %s", gameID)
+		return fmt.Errorf("coulnd delete server %s: %s", gameID, err.Error())
 	}
 
-	err = rh.gameKVS.Del(s.GameID)
-	if err != nil {
-		return fmt.Errorf("coulnd delete servers for game kvs: %s", gameID)
-	}
-
-	ids, err := rh.userKVS.Get(s.Owner)
-	if err != nil {
-		fmt.Printf("error: %s", err.Error())
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
-	}
-
-	for i, id := range ids {
-		if id == s.GameID {
-			ids = append(ids[:i], ids[i+1:]...)
-			break
-		}
-	}
-
-	err = rh.userKVS.Put(s.Owner, ids)
-	if err != nil {
-		fmt.Printf("error: %s", err.Error())
-
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
-	}
-
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, "created")
 
 	return nil

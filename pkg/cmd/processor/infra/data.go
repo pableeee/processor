@@ -99,3 +99,8 @@ func (rh *RequestHandler) DeleteServer(gameID string) error {
 
 	return nil
 }
+
+func MakeRequestHandler(g *GameKVS, u *UserKVS) RequestHandler {
+	rh := RequestHandler{gameKVS: g, userKVS: u}
+	return rh
+}
