@@ -56,6 +56,8 @@ func runPut(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	defer resp.Body.Close()
+
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("unable to read server response")

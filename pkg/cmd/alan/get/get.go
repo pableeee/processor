@@ -36,9 +36,11 @@ func runGet(cmd *cobra.Command, args []string) error {
 	}
 
 	resp, err := http.Get(fmt.Sprintf(url, userID))
-	if err != nil {
+	if err != nil || resp.StatusCode != http.StatusCreated {
 		return err
 	}
+
+	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

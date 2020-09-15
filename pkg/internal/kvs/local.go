@@ -2,6 +2,7 @@ package kvs
 
 import (
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -40,6 +41,27 @@ func (infra *LocalKVS) Put(k string, v []byte) error {
 	infra.mux.Lock()
 	(*infra.db)[k] = v
 	infra.mux.Unlock()
+
+	return nil
+}
+
+// Put implements a o local put service
+func (infra *LocalKVS) Del(k string) error {
+	if len(k) == 0 {
+		return fmt.Errorf("invalid user id")
+	}
+
+	infra.mux.Lock()
+	defer infra.mux.Unlock()
+
+	_, found := (*infra.db)[k]
+	if !found {
+		log.Printf("could not delete game:%s", k)
+
+		return nil
+	}
+
+	delete(*infra.db, k)
 
 	return nil
 }

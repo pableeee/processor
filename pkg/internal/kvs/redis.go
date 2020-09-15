@@ -38,3 +38,14 @@ func (r *RedisKVS) Put(k string, v []byte) error {
 
 	return res
 }
+
+func (r *RedisKVS) Del(k string) error {
+	_, err := r.client.Del(k).Result()
+	if err == redis.Nil {
+		return fmt.Errorf("%s does not exist", k)
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}

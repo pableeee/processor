@@ -17,13 +17,20 @@ type Server struct {
 }
 
 // Backend represents the backend server storing
-type Repository interface {
-	Get(userID string) ([]Server, error)
+type UserRepository interface {
+	Get(userID string) ([]string, error)
 	Put(userID string, s Server) error
+	Del(userID, gameID string) error
+}
+
+type GameRepository interface {
+	Get(gameID string) (Server, error)
+	Put(gameID string, s Server) error
+	Del(gameID string) error
 }
 
 type Infra struct {
-	kvs Repository
+	kvs UserRepository
 	dm  k8s.DeploymentManager
 }
 

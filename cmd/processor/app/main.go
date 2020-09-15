@@ -13,25 +13,31 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
-func getInfra() infra.Repository {
-	return infra.MakeLocalInfra()
-}
+var handler requestHandler
 
 func addHandlers(r *mux.Router) {
-	i := getInfra()
 
 	// handles get games requests
-	r.HandleFunc("/game/{userID}", func(w http.ResponseWriter, r *http.Request) {
-		err := handleGet(i, w, r)
+	r.HandleFunc("/user/{userID}", func(w http.ResponseWriter, r *http.Request) {
+		err := handler.handleUserGet(w, r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err.Error())
 		}
 	}).Methods("GET")
 
+	// handles get games requests
+	r.HandleFunc("/game/{gameID}", func(w http.ResponseWriter, r *http.Request) {
+		err := handler.handleGameDelete(w, r)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err.Error())
+		}
+	}).Methods("DELETE")
+
 	// handles post to add new games
 	r.HandleFunc("/game/", func(w http.ResponseWriter, r *http.Request) {
-		err := handlePost(i, w, r)
+		err := handler.handleGamePost(w, r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err.Error())
@@ -70,6 +76,9 @@ func handleSignals() <-chan struct{} {
 // Run executes the main app loop
 func Run() error {
 	srv := makeServer()
+
+	handler.gameKVS = infra.MakeLocalGameRepository()
+	handler.userKVS = infra.MakeLocalUserRepository()
 
 	c := handleSignals()
 	// start listening
