@@ -55,9 +55,9 @@ func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port ui
 	service := sm.createServiceFromTemplate(namespace1, name, port)
 
 	// Create service
-	var result *unstructured.Unstructured
+	// var result *unstructured.Unstructured
 
-	result, err = client.Resource(serviceRes).Namespace(namespace1).Create(context.TODO(), service, metav1.CreateOptions{})
+	result, err := client.Resource(serviceRes).Namespace(namespace1).Create(context.TODO(), service, metav1.CreateOptions{})
 
 	if err != nil {
 		return res, err

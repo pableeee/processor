@@ -1,0 +1,132 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2020-09-16T03:40:09Z"
+    generation: 1
+    labels:
+      app: 87a799a8
+    name: 87a799a8
+    namespace: default
+    resourceVersion: "1080290"
+    selfLink: /apis/apps/v1/namespaces/default/deployments/87a799a8
+    uid: 84753284-67f4-417f-b441-c385a298fb58
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: 87a799a8
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: 87a799a8
+      spec:
+        containers:
+        - image: nginx
+          imagePullPolicy: Always
+          name: 87a799a8
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2020-09-16T03:40:09Z"
+      lastUpdateTime: "2020-09-16T03:40:14Z"
+      message: ReplicaSet "87a799a8-699cbd4cdf" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2020-09-16T04:03:13Z"
+      lastUpdateTime: "2020-09-16T04:03:13Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2020-09-16T03:36:36Z"
+    generation: 1
+    labels:
+      app: a45f576f
+    name: a45f576f
+    namespace: default
+    resourceVersion: "1083374"
+    selfLink: /apis/apps/v1/namespaces/default/deployments/a45f576f
+    uid: 4a3df64a-34ff-49f3-900a-62eb788829a4
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: a45f576f
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: a45f576f
+      spec:
+        containers:
+        - image: nginx
+          imagePullPolicy: Always
+          name: a45f576f
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2020-09-16T03:36:36Z"
+      lastUpdateTime: "2020-09-16T03:36:42Z"
+      message: ReplicaSet "a45f576f-b984c4777" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2020-09-16T04:41:37Z"
+      lastUpdateTime: "2020-09-16T04:41:37Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

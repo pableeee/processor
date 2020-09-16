@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2020-09-16T03:22:55Z"
+  labels:
+    app: e0af121d
+  name: e0af121d
+  namespace: default
+  resourceVersion: "1076041"
+  selfLink: /api/v1/namespaces/default/services/e0af121d
+  uid: c79fe6ef-ad9d-4c2b-8cf8-94c8a8c69db8
+spec:
+  clusterIP: 10.100.79.100
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31824
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: e0af121d
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer:
+    ingress:
+    - hostname: localhost
