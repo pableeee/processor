@@ -8,12 +8,21 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/k8s"
 )
 
+type protocol uint16
+
+const (
+	Invalid protocol = iota
+	TCP
+	UDP
+)
+
 // Server represents a game server
 type Server struct {
-	Owner     string    `json:"owner"`
-	Game      string    `json:"game"`
-	GameID    string    `json:"id"`
-	CreatedAt time.Time `json:"created-at"`
+	Owner     string              `json:"owner"`
+	Game      string              `json:"game"`
+	GameID    string              `json:"id"`
+	Ports     map[protocol]uint16 `json:"ports"`
+	CreatedAt time.Time           `json:"created-at"`
 }
 
 // Backend represents the backend server storing
@@ -30,29 +39,36 @@ type GameRepository interface {
 }
 
 type Infra struct {
-	kvs UserRepository
-	dm  k8s.DeploymentManager
+	dm k8s.DeploymentManager
+	sm k8s.ServiceManager
 }
 
-func (i *Infra) CreateService(userID, game string) error {
-	uuid := uuid.New()
-	_, err := i.dm.CreateDeployment("", "default", game, uuid.String())
+func MakeNewInfra() *Infra {
+	//new(Infra)
+	return nil
+}
+
+func (i *Infra) CreateServer(userID, game string) error {
+	podID := uuid.New().String()
+
+	// TODO: setting +1 replicas of an existing deployment if possible
+	_, err := i.dm.CreateDeployment("", "default", game, podID)
 	if err != nil {
 		return fmt.Errorf("error creating resource: %s", err.Error())
 	}
 
-	s := Server{Game: game, CreatedAt: time.Now(), GameID: uuid.String(), Owner: userID}
-	k := fmt.Sprintf("%s:%s", s.Owner, s.GameID)
-
-	err = i.kvs.Put(k, s)
+	//CreateService(cfg, namespace, name string, port uint16) (ServiceResponse, error)
+	_, err = i.sm.CreateService("", "default", podID, 80)
 	if err != nil {
-		return fmt.Errorf("error on kvs put: %s", err.Error())
+		//TODO: pods was created, but not the service
+		return fmt.Errorf("error creating resource: %s", err.Error())
 	}
 
+	//res.
 	return nil
 }
 
-func (i *Infra) DeleteService(gameID string) error {
-	i.kvs.Get(gameID)
+func (i *Infra) DeleteServer(gameID string) error {
+
 	return nil
 }

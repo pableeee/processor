@@ -5,11 +5,10 @@ import (
 	"context"
 	"fmt"
 
-	apiv1 "k8s.io/api/core/v1"
+	"github.com/pableeee/processor/pkg/internal/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 	//
 	// Uncomment to load all auth plugins
 	// _ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -34,7 +33,7 @@ type DeploymentManagerImpl struct {
 //CreateDeployment creates a kubernetes deployment with the given parameters
 func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name string) (string, error) {
 
-	namespace, client, err := configSetup(cfg, namespace)
+	namespace, client, err := k8s.NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return "", err
@@ -55,7 +54,10 @@ func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name st
 	return "foobar", err
 }
 
-func (dp *DeploymentManagerImpl) listDeployments(err error, client dynamic.Interface, deploymentRes schema.GroupVersionResource, namespace string) {
+/*
+Don't kill ne future me ;)
+
+func (dp *DeploymentManagerImpl) listDeployments(client dynamic.Interface, deploymentRes schema.GroupVersionResource, namespace string) {
 	fmt.Printf("Listing deployments in namespace %q:\n", apiv1.NamespaceDefault)
 	list, err := client.Resource(deploymentRes).Namespace(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -70,6 +72,7 @@ func (dp *DeploymentManagerImpl) listDeployments(err error, client dynamic.Inter
 		fmt.Printf(" * %s (%d replicas)\n", d.GetName(), replicas)
 	}
 }
+*/
 
 //DeleteDeployment deletes the specified deployment
 func (dp *DeploymentManagerImpl) DeleteDeployment(cfg, namespace, name string) error {
