@@ -39,26 +39,40 @@ type GameRepository interface {
 }
 
 type Infra struct {
-	dm k8s.DeploymentManager
-	sm k8s.ServiceManager
+	deploy k8s.DeploymentManager
+	svc    k8s.ServiceManager
+	mapper ImageMapper
 }
 
 func MakeNewInfra() *Infra {
-	//new(Infra)
-	return nil
+	i := new(Infra)
+	i.deploy = &k8s.DeploymentManagerImpl{}
+	i.svc = &k8s.ServiceManagerImpl{}
+	i.mapper = &trivialMapper{}
+	return i
+}
+
+type ImageMapper interface {
+	GetImage(game string) string
+}
+type trivialMapper struct {
+}
+
+func (t *trivialMapper) GetImage(game string) string {
+	return "nginx"
 }
 
 func (i *Infra) CreateServer(userID, game string) error {
-	podID := uuid.New().String()
-
+	podID := uuid.New().String()[:8]
+	img := i.mapper.GetImage(game)
 	// TODO: setting +1 replicas of an existing deployment if possible
-	_, err := i.dm.CreateDeployment("", "default", game, podID)
+	_, err := i.deploy.CreateDeployment("", "default", img, podID)
 	if err != nil {
 		return fmt.Errorf("error creating resource: %s", err.Error())
 	}
 
 	//CreateService(cfg, namespace, name string, port uint16) (ServiceResponse, error)
-	_, err = i.sm.CreateService("", "default", podID, 80)
+	_, err = i.svc.CreateService("", "default", podID, 80)
 	if err != nil {
 		//TODO: pods was created, but not the service
 		return fmt.Errorf("error creating resource: %s", err.Error())

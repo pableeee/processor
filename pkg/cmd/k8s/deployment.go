@@ -23,7 +23,7 @@ import (
 //DeploymentManager K8s deployment wrapper interface
 type DeploymentManager interface {
 	CreateDeployment(cfg, namespace, image, name string) (string, error)
-	DeleteDeployment(cfg, namespace, name string) (string, error)
+	DeleteDeployment(cfg, namespace, name string) error
 }
 
 //DeploymentManagerImpl DeploymentManager implementation
