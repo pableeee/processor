@@ -76,7 +76,7 @@ func (dp *DeploymentManagerImpl) listDeployments(client dynamic.Interface, deplo
 
 //DeleteDeployment deletes the specified deployment
 func (dp *DeploymentManagerImpl) DeleteDeployment(cfg, namespace, name string) error {
-	namespace, client, err := configSetup(cfg, namespace)
+	namespace, client, err := k8s.NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return err

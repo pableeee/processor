@@ -70,7 +70,7 @@ func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port ui
 }
 
 func (sm *ServiceManagerImpl) DeleteService(cfg, namespace, name string) error {
-	namespace, client, err := configSetup(cfg, namespace)
+	namespace, client, err := k8s.NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return err
