@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pableeee/processor/pkg/cmd/k8s"
+	"github.com/pableeee/processor/pkg/internal/k8s"
 )
 
 type protocol uint16

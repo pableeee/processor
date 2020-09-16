@@ -13,5 +13,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not create server: %s", err.Error())
 	}
+
 	log.Println("Game created")
 }

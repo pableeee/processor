@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 
-	"github.com/pableeee/processor/pkg/internal/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -45,7 +44,7 @@ func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port ui
 
 	res := ServiceResponse{}
 
-	namespace1, client, err := k8s.NewConfigSetup(cfg, namespace)
+	namespace1, client, err := NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return res, err
@@ -70,7 +69,7 @@ func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port ui
 }
 
 func (sm *ServiceManagerImpl) DeleteService(cfg, namespace, name string) error {
-	namespace, client, err := k8s.NewConfigSetup(cfg, namespace)
+	namespace, client, err := NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return err

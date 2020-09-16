@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pableeee/processor/pkg/internal/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -33,7 +32,7 @@ type DeploymentManagerImpl struct {
 //CreateDeployment creates a kubernetes deployment with the given parameters
 func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name string) (string, error) {
 
-	namespace, client, err := k8s.NewConfigSetup(cfg, namespace)
+	namespace, client, err := NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return "", err
@@ -76,7 +75,7 @@ func (dp *DeploymentManagerImpl) listDeployments(client dynamic.Interface, deplo
 
 //DeleteDeployment deletes the specified deployment
 func (dp *DeploymentManagerImpl) DeleteDeployment(cfg, namespace, name string) error {
-	namespace, client, err := k8s.NewConfigSetup(cfg, namespace)
+	namespace, client, err := NewConfigSetup(cfg, namespace)
 
 	if err != nil {
 		return err
