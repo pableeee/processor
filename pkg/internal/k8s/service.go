@@ -25,13 +25,13 @@ type Port struct {
 	NodePort int64
 }
 
-type ServiceResponse struct {
-	Ports map[string]int64
+type Response struct {
+	Value map[string]interface{}
 }
 
 //ServiceManager K8s service wrapper interface
 type ServiceManager interface {
-	CreateService(cfg, namespace, name string, port uint16) (ServiceResponse, error)
+	CreateService(cfg, namespace, name string, port uint16) (Response, error)
 	DeleteService(cfg, namespace, name string) error
 }
 
@@ -40,9 +40,9 @@ type ServiceManagerImpl struct {
 }
 
 //CreateService asdsad
-func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port uint16) (ServiceResponse, error) {
+func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port uint16) (Response, error) {
 
-	res := ServiceResponse{}
+	res := Response{}
 
 	namespace1, client, err := NewConfigSetup(cfg, namespace)
 
@@ -63,7 +63,7 @@ func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port ui
 		return res, err
 	}
 
-	res.Ports, err = unwrapNodePort(result)
+	res.Value = result.UnstructuredContent()
 
 	return res, err
 }

@@ -21,7 +21,7 @@ import (
 
 //DeploymentManager K8s deployment wrapper interface
 type DeploymentManager interface {
-	CreateDeployment(cfg, namespace, image, name string) (string, error)
+	CreateDeployment(cfg, namespace, image, name string) (Response, error)
 	DeleteDeployment(cfg, namespace, name string) error
 }
 
@@ -30,12 +30,14 @@ type DeploymentManagerImpl struct {
 }
 
 //CreateDeployment creates a kubernetes deployment with the given parameters
-func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name string) (string, error) {
+func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name string) (Response, error) {
+
+	var res Response
 
 	namespace, client, err := NewConfigSetup(cfg, namespace)
 
 	if err != nil {
-		return "", err
+		return res, err
 	}
 
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
@@ -44,13 +46,16 @@ func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name st
 
 	// Create Deployment
 	fmt.Println("Creating deployment...")
+
 	result, err := client.Resource(deploymentRes).Namespace(namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
-		panic(err)
+		return res, err
 	}
-	fmt.Printf("Created deployment %q.\n", result.GetName())
 
-	return "foobar", err
+	fmt.Printf("Created deployment %q.\n", result.GetName())
+	res.Value = result.UnstructuredContent()
+
+	return res, err
 }
 
 /*

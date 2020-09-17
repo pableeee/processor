@@ -18,11 +18,18 @@ const (
 
 // Server represents a game server
 type Server struct {
-	Owner     string              `json:"owner"`
-	Game      string              `json:"game"`
-	GameID    string              `json:"id"`
-	Ports     map[protocol]uint16 `json:"ports"`
-	CreatedAt time.Time           `json:"created-at"`
+	Owner     string         `json:"owner"`
+	Game      string         `json:"game"`
+	GameID    string         `json:"id"`
+	Ports     []PortSettings `json:"ports"`
+	CreatedAt time.Time      `json:"created-at"`
+	IP        string         `json:"ip"`
+}
+
+type PortSettings struct {
+	Proto    protocol `json:"protocol"`
+	NodePort int64    `json:"node-port"`
+	Port     int64    `json:"port"`
 }
 
 // Backend represents the backend server storing
@@ -62,24 +69,51 @@ func (t *trivialMapper) GetImage(game string) string {
 	return "nginx"
 }
 
-func (i *Infra) CreateServer(userID, game string) error {
-	podID := uuid.New().String()[:8]
+func (i *Infra) CreateServer(userID, game string) (Server, error) {
+	podID := "p" + uuid.New().String()[:8]
+	s := Server{Game: game, CreatedAt: time.Now(), Owner: userID, GameID: podID}
 	img := i.mapper.GetImage(game)
 	// TODO: setting +1 replicas of an existing deployment if possible
 	_, err := i.deploy.CreateDeployment("", "default", img, podID)
 	if err != nil {
-		return fmt.Errorf("error creating resource: %s", err.Error())
+		return s, fmt.Errorf("error creating resource: %s", err.Error())
 	}
-
+	time.Sleep(1 * time.Second)
 	//CreateService(cfg, namespace, name string, port uint16) (ServiceResponse, error)
-	_, err = i.svc.CreateService("", "default", podID, 80)
+	res, err := i.svc.CreateService("", "default", podID, 80)
 	if err != nil {
 		//TODO: pods was created, but not the service
-		return fmt.Errorf("error creating resource: %s", err.Error())
+		return s, fmt.Errorf("error creating resource: %s", err.Error())
 	}
 
-	//res.
-	return nil
+	ports, err := res.GetSlice("spec", "ports")
+	if err != nil {
+		//TODO: pods was created, but not the service
+		return s, fmt.Errorf("error creating resource: %s", err.Error())
+	}
+
+	s.IP, _ = res.GetString("spec", "clusterIP")
+	s.Ports = make([]PortSettings, len(ports))
+	for i, v := range ports {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			return s, fmt.Errorf("Unable to unwrap service port details")
+		}
+		p := PortSettings{}
+		proto := m["protocol"]
+		switch proto {
+		case "TCP":
+			p.Proto = TCP
+		case "UDP":
+			p.Proto = UDP
+		}
+
+		p.NodePort = m["nodePort"].(int64)
+		p.Port = m["port"].(int64)
+		s.Ports[i] = p
+	}
+
+	return s, nil
 }
 
 func (i *Infra) DeleteServer(gameID string) error {

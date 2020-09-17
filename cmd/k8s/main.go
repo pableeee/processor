@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
@@ -9,10 +10,10 @@ import (
 func main() {
 	infra := infra.MakeNewInfra()
 
-	err := infra.CreateServer("pable", "cs16")
+	s, err := infra.CreateServer("pable", "cs16")
 	if err != nil {
 		log.Fatalf("Could not create server: %s", err.Error())
 	}
 
-	log.Println("Game created")
+	fmt.Printf("Game created!\n%#v", s)
 }
