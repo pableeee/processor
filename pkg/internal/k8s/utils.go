@@ -7,26 +7,6 @@ import (
 	un "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-//UnwrapNodePort Retrieves the nodeport assined from the k8s api result
-func unwrapNodePort(result *un.Unstructured) (map[string]int64, error) {
-	res := make(map[string]int64)
-
-	keys := []string{"nodePort", "targetPort"}
-	ports, ok, err := un.NestedSlice(result.UnstructuredContent(), "spec", "ports")
-
-	if ok && err == nil && len(ports) > 0 {
-		for _, ele := range ports {
-			port, _ := ele.(map[string]interface{})
-			for _, key := range keys {
-				num, _ := port[key].(int64)
-				res[key] = num
-			}
-		}
-	}
-
-	return res, nil
-}
-
 func (r *Response) GetString(k ...string) (string, error) {
 	s, err := r.GetValue(reflect.String, k...)
 	if err != nil {
