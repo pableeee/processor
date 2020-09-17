@@ -76,9 +76,7 @@ func handleSignals() <-chan struct{} {
 // Run executes the main app loop
 func Run() error {
 	srv := makeServer()
-	handler.handler = infra.MakeRequestHandler(infra.MakeLocalGameRepository(),
-		infra.MakeLocalUserRepository())
-
+	handler.handler = infra.MakeInfraService()
 	c := handleSignals()
 	// start listening
 	err := srv.ListenAndServe()

@@ -2,8 +2,6 @@ package infra
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
 // RequestHandler handler creation request
@@ -35,16 +33,13 @@ func (rh *RequestHandler) GetServer(userID string) ([]Server, error) {
 	return srvs, nil
 }
 
-func (rh *RequestHandler) CreateServer(s Server) (string, error) {
-
-	s.GameID = uuid.New().String()
-
+func (rh *RequestHandler) CreateServer(s Server) error {
 	ids, err := rh.userKVS.Get(s.Owner)
 	if err == UserNotFound {
 		ids = make([]string, 0)
 	} else if err != nil {
 		fmt.Printf("error: %s", err.Error())
-		return "", fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
 
 	ids = append(ids, s.GameID)
@@ -52,21 +47,20 @@ func (rh *RequestHandler) CreateServer(s Server) (string, error) {
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 
-		return "", fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
 
 	err = rh.gameKVS.Put(s.GameID, s)
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 
-		return "", fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return fmt.Errorf("could not update servers for user:%s", s.Owner)
 	}
 
-	return s.GameID, nil
+	return nil
 }
 
 func (rh *RequestHandler) DeleteServer(gameID string) error {
-
 	s, err := rh.gameKVS.Get(gameID)
 	if err != nil {
 		return fmt.Errorf("coulnd get servers for get kvs: %s", gameID)

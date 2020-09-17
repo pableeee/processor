@@ -2,6 +2,7 @@ package infra
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,19 +31,6 @@ type PortSettings struct {
 	Proto    protocol `json:"protocol"`
 	NodePort int64    `json:"node-port"`
 	Port     int64    `json:"port"`
-}
-
-// Backend represents the backend server storing
-type UserRepository interface {
-	Get(userID string) ([]string, error)
-	Put(userID string, s Server) error
-	Del(userID, gameID string) error
-}
-
-type GameRepository interface {
-	Get(gameID string) (Server, error)
-	Put(gameID string, s Server) error
-	Del(gameID string) error
 }
 
 type Infra struct {
@@ -79,7 +67,8 @@ func (i *Infra) CreateServer(userID, game string) (Server, error) {
 		return s, fmt.Errorf("error creating resource: %s", err.Error())
 	}
 	time.Sleep(1 * time.Second)
-	//CreateService(cfg, namespace, name string, port uint16) (ServiceResponse, error)
+	// its probably better to just create the deployment, and create the service using an operator
+	// instead of using this untrusty sleep up there
 	res, err := i.svc.CreateService("", "default", podID, 80)
 	if err != nil {
 		//TODO: pods was created, but not the service
@@ -117,6 +106,18 @@ func (i *Infra) CreateServer(userID, game string) (Server, error) {
 }
 
 func (i *Infra) DeleteServer(gameID string) error {
+
+	err := i.svc.DeleteService("", "", gameID)
+	if err != nil {
+		// I wont care too much about this for now, since I should use an operator to handler
+		// service creation an deletion
+		log.Printf("error deleting service %s: %s", gameID, err.Error())
+	}
+
+	err = i.deploy.DeleteDeployment("", "", gameID)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

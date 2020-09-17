@@ -11,7 +11,7 @@ import (
 )
 
 type requestHandler struct {
-	handler infra.RequestHandler
+	handler infra.InfraManager
 }
 
 func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) error {
@@ -55,13 +55,13 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 		return fmt.Errorf("could not decode mesage")
 	}
 
-	gameID, err := rh.handler.CreateServer(s)
+	s, err = rh.handler.CreateServer(s.Owner, s.Game)
 	if err != nil {
 		return fmt.Errorf("could not create server: %s", err.Error())
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "game %s created\n", gameID)
+	fmt.Fprintf(w, "game %#v created\n", s)
 
 	return nil
 }
