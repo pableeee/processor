@@ -1,0 +1,13 @@
+linters-settings:
+  lll:
+    line-length: 120
+
+run:
+  tests: false # run linter on test files
+  deadline: 5m
+
+linters:
+  enable-all: true
+  disable:
+    - unused
+    - funlen

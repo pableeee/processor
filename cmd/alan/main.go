@@ -11,11 +11,10 @@ import (
 )
 
 func main() {
-
-	var rootCmd = &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use: "alan",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+			_ = cmd.Help()
 		},
 	}
 

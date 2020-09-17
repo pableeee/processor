@@ -16,7 +16,6 @@ import (
 var handler requestHandler
 
 func addHandlers(r *mux.Router) {
-
 	// handles get games requests
 	r.HandleFunc("/user/{userID}", func(w http.ResponseWriter, r *http.Request) {
 		err := handler.handleUserGet(w, r)
@@ -62,18 +61,22 @@ func makeServer() *http.Server {
 
 func handleSignals() <-chan struct{} {
 	c := make(chan struct{})
-	go func() {
+
+	handleKill := func() {
 		s := make(chan os.Signal, 1)
 		signal.Notify(s, os.Interrupt, syscall.SIGTERM)
 		// waiting for SIGTERM, to stop de server
 		<-s
 		// signal to exit the app
 		c <- struct{}{}
-	}()
+	}
+
+	go handleKill()
+
 	return c
 }
 
-// Run executes the main app loop
+// Run executes the main app loop.
 func Run() error {
 	srv := makeServer()
 	handler.handler = infra.MakeInfraService()
@@ -93,7 +96,7 @@ func Run() error {
 	return nil
 }
 
-// Main app function
+// Main app function.
 func Main() error {
 	return Run()
 }

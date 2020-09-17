@@ -56,7 +56,6 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 	s := infra.Server{}
 
 	err := d.Decode(&s)
-
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 

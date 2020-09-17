@@ -25,10 +25,12 @@ func main() {
 func Main() {
 	// Open a simple Discord session
 	token := os.Getenv("TOKEN")
+
 	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic(err)
 	}
+
 	err = session.Open()
 	if err != nil {
 		panic(err)
@@ -96,7 +98,7 @@ func Main() {
 		},
 
 		// These fields get displayed in the default help messages
-		Description: "Gets all games asociated with a user",
+		Description: "Gets all games associated with a user",
 		Usage:       "get",
 		Example:     "get pableeeee",
 
@@ -109,7 +111,8 @@ func Main() {
 		// You may define sub commands in here
 		SubCommands: []*dgc.Command{},
 
-		// We want the user to be able to execute this command once in five seconds and the cleanup interval shpuld be one second
+		// We want the user to be able to execute this command once in five seconds
+		// and the cleanup interval shpuld be one second.
 		RateLimiter: dgc.NewRateLimiter(5*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
 			err := ctx.RespondText("You are being rate limited!")
 			if err != nil {
@@ -125,7 +128,6 @@ func Main() {
 }
 
 func objCommand(ctx *dgc.Ctx) {
-
 	write := func(ctx *dgc.Ctx, msg string) {
 		err := ctx.RespondText(msg)
 		if err != nil {
@@ -140,18 +142,23 @@ func objCommand(ctx *dgc.Ctx) {
 	userID := ctx.Arguments.Get(0).Raw()
 	if len(userID) == 0 {
 		log.Fatal("invalid username")
+
 		return
 	}
 
 	resp, err := http.Get(fmt.Sprintf(url, userID))
 	if err != nil {
 		log.Fatal("invalid number of arguments")
+
 		return
 	}
 
+	defer resp.Body.Close()
+
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("unable to read server response")
+		log.Print("unable to read server response")
+
 		return
 	}
 
