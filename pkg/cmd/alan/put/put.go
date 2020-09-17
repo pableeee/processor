@@ -18,9 +18,13 @@ const (
 	contentType = "application/json"
 )
 
+var (
+	ErrorInvalidArgs = fmt.Errorf("invalid arguments")
+	ErrorMarshalling = fmt.Errorf("unable to marshal info to backend")
+)
+
 // NewCommand returns a new cobra.Command for cluster creation
 func NewCommand() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Args:    cobra.ExactArgs(2),
 		Use:     "put",
@@ -42,15 +46,16 @@ func runPut(cmd *cobra.Command, args []string) error {
 	s := infra.Server{Game: game, CreatedAt: time.Now(), GameID: id.String(), Owner: userID}
 
 	if len(userID) == 0 || len(game) == 0 {
-		return fmt.Errorf("invalid arguments")
+		return ErrorInvalidArgs
 	}
 
 	j, err := json.Marshal(s)
 	if err != nil {
-		return fmt.Errorf("unable to marshal info to backend")
+		return ErrorMarshalling
 	}
 
 	r := bytes.NewReader(j)
+
 	resp, err := http.Post(url, contentType, r)
 	if err != nil || resp.StatusCode != http.StatusCreated {
 		return err

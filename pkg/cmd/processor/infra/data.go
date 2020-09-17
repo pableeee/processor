@@ -1,7 +1,16 @@
 package infra
 
 import (
+	"errors"
 	"fmt"
+)
+
+var (
+	ErrorUserNotFound = fmt.Errorf("user is missing")
+	ErrorRetrieve     = fmt.Errorf("coulnd not retrieve")
+	ErrorUpdate       = fmt.Errorf("coulnd not update")
+	ErrorDelete       = fmt.Errorf("coulnd not delete")
+	ErrorUnknown      = fmt.Errorf("unknown error")
 )
 
 // RequestHandler handler creation request
@@ -12,22 +21,23 @@ type RequestHandler struct {
 
 func (rh *RequestHandler) GetServer(userID string) ([]Server, error) {
 	if len(userID) == 0 {
-		return nil, fmt.Errorf("user is missing")
+		return nil, ErrorUserNotFound
 	}
 
 	IDs, err := rh.userKVS.Get(userID)
 	if err != nil || len(IDs) == 0 {
-		return nil, fmt.Errorf("coulnd not retrieve games")
+		return nil, ErrorRetrieve
 	}
 
-	var srvs []Server
+	srvs := make([]Server, len(IDs))
 
-	for _, id := range IDs {
+	for i, id := range IDs {
 		s, err := rh.gameKVS.Get(id)
 		if err != nil {
-			return nil, fmt.Errorf("coulnd not retrieve games")
+			return nil, ErrorRetrieve
 		}
-		srvs = append(srvs, s)
+
+		srvs[i] = s
 	}
 
 	return srvs, nil
@@ -35,26 +45,28 @@ func (rh *RequestHandler) GetServer(userID string) ([]Server, error) {
 
 func (rh *RequestHandler) CreateServer(s Server) error {
 	ids, err := rh.userKVS.Get(s.Owner)
-	if err == UserNotFound {
+	if errors.Is(err, UserNotFound) {
 		ids = make([]string, 0)
 	} else if err != nil {
 		fmt.Printf("error: %s", err.Error())
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
+
+		return ErrorRetrieve
 	}
 
 	ids = append(ids, s.GameID)
+
 	err = rh.userKVS.Put(s.Owner, ids)
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return ErrorUpdate
 	}
 
 	err = rh.gameKVS.Put(s.GameID, s)
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return ErrorUpdate
 	}
 
 	return nil
@@ -63,23 +75,25 @@ func (rh *RequestHandler) CreateServer(s Server) error {
 func (rh *RequestHandler) DeleteServer(gameID string) error {
 	s, err := rh.gameKVS.Get(gameID)
 	if err != nil {
-		return fmt.Errorf("coulnd get servers for get kvs: %s", gameID)
+		return ErrorRetrieve
 	}
 
 	err = rh.gameKVS.Del(s.GameID)
 	if err != nil {
-		return fmt.Errorf("coulnd delete servers for game kvs: %s", gameID)
+		return ErrorDelete
 	}
 
 	ids, err := rh.userKVS.Get(s.Owner)
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
+
+		return ErrorUpdate
 	}
 
 	for i, id := range ids {
 		if id == s.GameID {
 			ids = append(ids[:i], ids[i+1:]...)
+
 			break
 		}
 	}
@@ -88,7 +102,7 @@ func (rh *RequestHandler) DeleteServer(gameID string) error {
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 
-		return fmt.Errorf("could not update servers for user:%s", s.Owner)
+		return ErrorUpdate
 	}
 
 	return nil
@@ -96,5 +110,6 @@ func (rh *RequestHandler) DeleteServer(gameID string) error {
 
 func MakeRequestHandler(g *GameKVS, u *UserKVS) RequestHandler {
 	rh := RequestHandler{gameKVS: g, userKVS: u}
+
 	return rh
 }

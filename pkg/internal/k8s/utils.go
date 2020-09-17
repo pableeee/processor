@@ -7,11 +7,17 @@ import (
 	un "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+var (
+	ErrorInvalidKind = fmt.Errorf("invalid kind")
+	ErrorKeyNotFound = fmt.Errorf("key not found")
+)
+
 func (r *Response) GetString(k ...string) (string, error) {
 	s, err := r.GetValue(reflect.String, k...)
 	if err != nil {
 		return "", err
 	}
+
 	return s.(string), nil
 }
 
@@ -20,6 +26,7 @@ func (r *Response) GetInt64(k ...string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return s.(int64), nil
 }
 
@@ -28,6 +35,7 @@ func (r *Response) GetBool(k ...string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	return s.(bool), nil
 }
 
@@ -36,6 +44,7 @@ func (r *Response) GetMap(k ...string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return s.(map[string]interface{}), nil
 }
 
@@ -44,12 +53,15 @@ func (r *Response) GetSlice(k ...string) ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return s.([]interface{}), nil
 }
 
 func (r *Response) GetValue(t reflect.Kind, k ...string) (interface{}, error) {
 	var ok bool
+
 	var err error
+
 	var v interface{}
 
 	switch t {
@@ -64,13 +76,13 @@ func (r *Response) GetValue(t reflect.Kind, k ...string) (interface{}, error) {
 	case reflect.Int64:
 		v, ok, err = un.NestedInt64(r.Value, k...)
 	default:
-		err = fmt.Errorf("invalid kind")
+		err = ErrorInvalidKind
 	}
 
 	if err != nil {
 		return nil, err
 	} else if !ok {
-		return nil, fmt.Errorf("key %s not found", k)
+		return nil, ErrorKeyNotFound
 	}
 
 	return v, nil

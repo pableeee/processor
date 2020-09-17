@@ -17,6 +17,11 @@ const (
 	UDP
 )
 
+var (
+	ErrorCreatingResource = fmt.Errorf("error creating resource")
+	ErrorUnwrappingPort   = fmt.Errorf("unable to unwrap service port details")
+)
+
 // Server represents a game server
 type Server struct {
 	Owner     string         `json:"owner"`
@@ -44,6 +49,7 @@ func MakeNewInfra() *Infra {
 	i.deploy = &k8s.DeploymentManagerImpl{}
 	i.svc = &k8s.ServiceManagerImpl{}
 	i.mapper = &trivialMapper{}
+
 	return i
 }
 
@@ -64,32 +70,36 @@ func (i *Infra) CreateServer(userID, game string) (Server, error) {
 	// TODO: setting +1 replicas of an existing deployment if possible
 	_, err := i.deploy.CreateDeployment("", "default", img, podID)
 	if err != nil {
-		return s, fmt.Errorf("error creating resource: %s", err.Error())
+		return s, ErrorCreatingResource
 	}
+
 	time.Sleep(1 * time.Second)
 	// its probably better to just create the deployment, and create the service using an operator
 	// instead of using this untrusty sleep up there
 	res, err := i.svc.CreateService("", "default", podID, 80)
 	if err != nil {
 		//TODO: pods was created, but not the service
-		return s, fmt.Errorf("error creating resource: %s", err.Error())
+		return s, ErrorCreatingResource
 	}
 
 	ports, err := res.GetSlice("spec", "ports")
 	if err != nil {
 		//TODO: pods was created, but not the service
-		return s, fmt.Errorf("error creating resource: %s", err.Error())
+		return s, ErrorCreatingResource
 	}
 
 	s.IP, _ = res.GetString("spec", "clusterIP")
 	s.Ports = make([]PortSettings, len(ports))
+
 	for i, v := range ports {
 		m, ok := v.(map[string]interface{})
 		if !ok {
-			return s, fmt.Errorf("Unable to unwrap service port details")
+			return s, ErrorUnwrappingPort
 		}
+
 		p := PortSettings{}
 		proto := m["protocol"]
+
 		switch proto {
 		case "TCP":
 			p.Proto = TCP
@@ -106,7 +116,6 @@ func (i *Infra) CreateServer(userID, game string) (Server, error) {
 }
 
 func (i *Infra) DeleteServer(gameID string) error {
-
 	err := i.svc.DeleteService("", "", gameID)
 	if err != nil {
 		// I wont care too much about this for now, since I should use an operator to handler

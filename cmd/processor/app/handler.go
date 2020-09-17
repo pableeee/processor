@@ -10,6 +10,14 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
+var (
+	ErrorUserMissing    = fmt.Errorf("owner is missing")
+	ErrorRetrieve       = fmt.Errorf("error retieving the servers for user")
+	ErrorDecodingMsg    = fmt.Errorf("could not decode mesage")
+	ErrorCreatingServer = fmt.Errorf("could not create server")
+	ErrorDeletingServer = fmt.Errorf("coulnd delete server")
+)
+
 type requestHandler struct {
 	handler infra.InfraManager
 }
@@ -17,17 +25,17 @@ type requestHandler struct {
 func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	if vars == nil {
-		return fmt.Errorf("owner is missing")
+		return ErrorUserMissing
 	}
 
 	own, found := vars["userID"]
 	if !found {
-		return fmt.Errorf("user id is missing")
+		return ErrorUserMissing
 	}
 
 	srvs, err := rh.handler.GetServer(own)
 	if err != nil {
-		return fmt.Errorf("error retieving the servers for user %s: %s", own, err.Error())
+		return ErrorRetrieve
 	}
 
 	b := strings.Builder{}
@@ -36,6 +44,7 @@ func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) 
 	for _, v := range srvs {
 		b.WriteString(fmt.Sprintf("%s - id:%s\n", v.Game, v.GameID))
 	}
+
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, b.String())
 
@@ -43,7 +52,6 @@ func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) 
 }
 
 func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request) error {
-
 	d := json.NewDecoder(r.Body)
 	s := infra.Server{}
 
@@ -52,12 +60,12 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		fmt.Printf("error: %s", err.Error())
 
-		return fmt.Errorf("could not decode mesage")
+		return ErrorDecodingMsg
 	}
 
 	s, err = rh.handler.CreateServer(s.Owner, s.Game)
 	if err != nil {
-		return fmt.Errorf("could not create server: %s", err.Error())
+		return ErrorCreatingServer
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -67,20 +75,19 @@ func (rh *requestHandler) handleGamePost(w http.ResponseWriter, r *http.Request)
 }
 
 func (rh *requestHandler) handleGameDelete(w http.ResponseWriter, r *http.Request) error {
-
 	vars := mux.Vars(r)
 	if vars == nil {
-		return fmt.Errorf("owner is missin")
+		return ErrorUserMissing
 	}
 
 	gameID, found := vars["gameID"]
 	if !found {
-		return fmt.Errorf("user id is missing")
+		return ErrorUserMissing
 	}
 
 	err := rh.handler.DeleteServer(gameID)
 	if err != nil {
-		return fmt.Errorf("coulnd delete server %s: %s", gameID, err.Error())
+		return ErrorDeletingServer
 	}
 
 	w.WriteHeader(http.StatusOK)

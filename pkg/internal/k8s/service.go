@@ -29,36 +29,31 @@ type Response struct {
 	Value map[string]interface{}
 }
 
-//ServiceManager K8s service wrapper interface
+// ServiceManager K8s service wrapper interface
 type ServiceManager interface {
 	CreateService(cfg, namespace, name string, port uint16) (Response, error)
 	DeleteService(cfg, namespace, name string) error
 }
 
-//ServiceManagerImpl ServiceManager implementation
+// ServiceManagerImpl ServiceManager implementation
 type ServiceManagerImpl struct {
 }
 
-//CreateService asdsad
+// CreateService asdsad
 func (sm *ServiceManagerImpl) CreateService(cfg, namespace, name string, port uint16) (Response, error) {
-
 	res := Response{}
 
 	namespace1, client, err := NewConfigSetup(cfg, namespace)
-
 	if err != nil {
 		return res, err
 	}
 
 	serviceRes := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}
-
 	service := sm.createServiceFromTemplate(namespace1, name, port)
-
 	// Create service
 	// var result *unstructured.Unstructured
-
-	result, err := client.Resource(serviceRes).Namespace(namespace1).Create(context.TODO(), service, metav1.CreateOptions{})
-
+	result, err := client.Resource(serviceRes).Namespace(namespace1).Create(context.TODO(),
+		service, metav1.CreateOptions{})
 	if err != nil {
 		return res, err
 	}
@@ -86,7 +81,8 @@ func (sm *ServiceManagerImpl) DeleteService(cfg, namespace, name string) error {
 	return err
 }
 
-func (sm *ServiceManagerImpl) createServiceFromTemplate(namespace, name string, port uint16) *unstructured.Unstructured {
+func (sm *ServiceManagerImpl) createServiceFromTemplate(namespace, name string,
+	port uint16) *unstructured.Unstructured {
 	service := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "v1",
@@ -116,5 +112,6 @@ func (sm *ServiceManagerImpl) createServiceFromTemplate(namespace, name string, 
 			},
 		},
 	}
+
 	return service
 }

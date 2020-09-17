@@ -13,9 +13,10 @@ const (
 	contentType = "application/json"
 )
 
+var ErrorInvalidArgs = fmt.Errorf("invalid arguments")
+
 // NewCommand returns a new cobra.Command for cluster creation
 func NewCommand() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Args:    cobra.ExactArgs(1),
 		Use:     "del",
@@ -32,7 +33,7 @@ func runDel(cmd *cobra.Command, args []string) error {
 	gameID := args[0]
 
 	if len(gameID) == 0 {
-		return fmt.Errorf("invalid arguments")
+		return ErrorInvalidArgs
 	}
 
 	// Create client

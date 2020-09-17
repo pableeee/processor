@@ -2,9 +2,7 @@ package kvs
 
 import "errors"
 
-var (
-	KeyNotFound = errors.New("key not found")
-)
+var KeyNotFound = errors.New("key not found")
 
 type KVS interface {
 	Get(k string) ([]byte, error)

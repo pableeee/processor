@@ -19,35 +19,32 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
 
-//DeploymentManager K8s deployment wrapper interface
+// DeploymentManager K8s deployment wrapper interface
 type DeploymentManager interface {
 	CreateDeployment(cfg, namespace, image, name string) (Response, error)
 	DeleteDeployment(cfg, namespace, name string) error
 }
 
-//DeploymentManagerImpl DeploymentManager implementation
+// DeploymentManagerImpl DeploymentManager implementation
 type DeploymentManagerImpl struct {
 }
 
-//CreateDeployment creates a kubernetes deployment with the given parameters
+// CreateDeployment creates a kubernetes deployment with the given parameters.
 func (dp *DeploymentManagerImpl) CreateDeployment(cfg, namespace, image, name string) (Response, error) {
-
 	var res Response
 
 	namespace, client, err := NewConfigSetup(cfg, namespace)
-
 	if err != nil {
 		return res, err
 	}
 
 	deploymentRes := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-
 	deployment := createDeploymentFromTemplate(namespace, image, name)
-
 	// Create Deployment
 	fmt.Println("Creating deployment...")
 
-	result, err := client.Resource(deploymentRes).Namespace(namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
+	result, err := client.Resource(deploymentRes).Namespace(namespace).Create(context.TODO(),
+		deployment, metav1.CreateOptions{})
 	if err != nil {
 		return res, err
 	}
@@ -78,7 +75,7 @@ func (dp *DeploymentManagerImpl) listDeployments(client dynamic.Interface, deplo
 }
 */
 
-//DeleteDeployment deletes the specified deployment
+// DeleteDeployment deletes the specified deployment
 func (dp *DeploymentManagerImpl) DeleteDeployment(cfg, namespace, name string) error {
 	namespace, client, err := NewConfigSetup(cfg, namespace)
 
@@ -142,5 +139,6 @@ func createDeploymentFromTemplate(namespace, image, name string) *unstructured.U
 			},
 		},
 	}
+
 	return deployment
 }

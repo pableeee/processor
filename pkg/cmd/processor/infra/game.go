@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	GameNotFound = errors.New("Game not found")
+	ErrorGameNotFound = fmt.Errorf("game not found")
+	ErrorInvalidID    = fmt.Errorf("invalid id")
 )
 
 // GameKVS for local tests
@@ -20,32 +21,34 @@ type GameKVS struct {
 // Get implements a local get service
 func (infra *GameKVS) Get(gameID string) (Server, error) {
 	if len(gameID) == 0 {
-		return Server{}, fmt.Errorf("invalid game id")
+		return Server{}, ErrorInvalidID
 	}
 
 	b, err := infra.kvs.Get(gameID)
-	if err == kvs.KeyNotFound {
+	if errors.Is(err, kvs.KeyNotFound) {
 		return Server{}, nil
 	} else if err != nil {
 		fmt.Printf("could not retieve game from local repository: %s", err.Error())
+
 		return Server{}, err
 	}
 
 	var s Server
+
 	err = json.Unmarshal(b, &s)
 	if err != nil {
 		fmt.Printf("unable to unmarshall object from kvs: %s", err.Error())
+
 		return Server{}, err
 	}
 
 	return s, nil
-
 }
 
 // Put implements a o local put service
 func (infra *GameKVS) Put(gameID string, s Server) error {
 	if len(gameID) == 0 {
-		return fmt.Errorf("invalid game id")
+		return ErrorInvalidID
 	}
 
 	b, err := json.Marshal(&s)
@@ -68,12 +71,13 @@ func (infra *GameKVS) Put(gameID string, s Server) error {
 // Get implements a local get service
 func (infra *GameKVS) Del(gameID string) error {
 	if len(gameID) == 0 {
-		return fmt.Errorf("invalid game id")
+		return ErrorInvalidID
 	}
 
 	err := infra.kvs.Del(gameID)
 	if err != nil {
 		fmt.Printf("could not delete game from repository: %s", err.Error())
+
 		return err
 	}
 
