@@ -10,7 +10,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-var ErrKeyNotFound = errors.New("key not found")
+var (
+	ErrKeyNotFound = errors.New("key not found")
+	ErrEmptyKey    = errors.New("key is empty")
+)
 
 type KVS interface {
 	Get(k string) ([]byte, error)
@@ -28,25 +31,50 @@ type routeKVSClientService struct {
 	kvsClient KVS
 }
 
-func (r *routeKVSClientService) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
-	if len(in.Key) <= 0 {
-		return nil, fmt.Errorf("key is empty")
+func (r *routeKVSClientService) Get(ctx context.Context, in *GetRequest,
+	opts ...grpc.CallOption) (*GetResponse, error) {
+	if len(in.Key) == 0 {
+		return nil, ErrEmptyKey
 	}
-	
+
 	b, err := r.kvsClient.Get(in.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	GetResponse{Key: in.Key, Values: }
+	res := GetResponse{Key: in.Key, Values: b}
+
+	return &res, nil
 }
 
 func (r *routeKVSClientService) Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*Response, error) {
+	if len(in.Key) == 0 {
+		return nil, ErrEmptyKey
+	}
 
+	err := r.kvsClient.Del(in.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	res := Response{Code: 0}
+
+	return &res, nil
 }
 
 func (r *routeKVSClientService) Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*Response, error) {
+	if len(in.Key) == 0 {
+		return nil, ErrEmptyKey
+	}
 
+	err := r.kvsClient.Put(in.Key, in.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	res := Response{Code: 0}
+
+	return &res, nil
 }
 
 func NewKVS(kvsClient KVS, port int64) (*ServerImpl, error) {
@@ -69,5 +97,7 @@ func NewKVS(kvsClient KVS, port int64) (*ServerImpl, error) {
 }
 
 func (s *ServerImpl) Listen() {
-	s.server.Serve(*s.lis)
+	if err := s.server.Serve(*s.lis); err != nil {
+		return
+	}
 }

@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrorInvalidKind    = fmt.Errorf("invalid kind")
-	ErrorErrKeyNotFound = fmt.Errorf("key not found")
+	ErrorInvalidKind = fmt.Errorf("invalid kind")
+	ErrKeyNotFound   = fmt.Errorf("key not found")
 )
 
 func (r *Response) GetString(k ...string) (string, error) {
@@ -82,7 +82,7 @@ func (r *Response) GetValue(t reflect.Kind, k ...string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	} else if !ok {
-		return nil, ErrorErrKeyNotFound
+		return nil, ErrKeyNotFound
 	}
 
 	return v, nil

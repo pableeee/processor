@@ -2,12 +2,9 @@ package kvs
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/go-redis/redis"
 )
-
-var ErrorErrKeyNotFound = fmt.Errorf("key not found")
 
 type RedisKVS struct {
 	client *redis.Client
@@ -28,7 +25,7 @@ func MakeRedisKVS() *RedisKVS {
 func (r *RedisKVS) Get(k string) ([]byte, error) {
 	val, err := r.client.Get(k).Bytes()
 	if errors.Is(err, redis.Nil) {
-		return nil, ErrorErrKeyNotFound
+		return nil, ErrKeyNotFound
 	} else if err != nil {
 		return nil, err
 	}
@@ -45,7 +42,7 @@ func (r *RedisKVS) Put(k string, v []byte) error {
 func (r *RedisKVS) Del(k string) error {
 	_, err := r.client.Del(k).Result()
 	if errors.Is(err, redis.Nil) {
-		return ErrorErrKeyNotFound
+		return ErrKeyNotFound
 	} else if err != nil {
 		return err
 	}
