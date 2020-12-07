@@ -8,13 +8,13 @@ import (
 
 var ErrorInvalidID = fmt.Errorf("invalid user id")
 
-// LocalKVS for local tests
+// LocalKVS for local tests.
 type LocalKVS struct {
 	db  *map[string][]byte
 	mux *sync.Mutex
 }
 
-// Get implements a local get service
+// Get implements a local get service.
 func (infra *LocalKVS) Get(k string) ([]byte, error) {
 	if len(k) == 0 {
 		return nil, ErrorInvalidID
@@ -25,14 +25,13 @@ func (infra *LocalKVS) Get(k string) ([]byte, error) {
 	infra.mux.Unlock()
 
 	if !found {
-		return nil, KeyNotFound
+		return nil, ErrKeyNotFound
 	}
 
 	return s, nil
-
 }
 
-// Put implements a o local put service
+// Put implements a o local put service.
 func (infra *LocalKVS) Put(k string, v []byte) error {
 	if len(k) == 0 {
 		return ErrorInvalidID
@@ -45,7 +44,7 @@ func (infra *LocalKVS) Put(k string, v []byte) error {
 	return nil
 }
 
-// Put implements a o local put service
+// Put implements a o local put service.
 func (infra *LocalKVS) Del(k string) error {
 	if len(k) == 0 {
 		return ErrorInvalidID
@@ -66,7 +65,7 @@ func (infra *LocalKVS) Del(k string) error {
 	return nil
 }
 
-// MakeLocalInfra makes an instances of a local infra
+// MakeLocalInfra makes an instances of a local infra.
 func MakeLocalKVS() *LocalKVS {
 	instance := new(LocalKVS)
 	instance.mux = &sync.Mutex{}

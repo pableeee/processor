@@ -25,7 +25,7 @@ func (infra *UserKVS) Get(userID string) ([]string, error) {
 
 	b, err := infra.kvs.Get(userID)
 
-	if err == kvs.KeyNotFound {
+	if err == kvs.ErrKeyNotFound {
 		return []string{}, UserNotFound
 	} else if err != nil {
 		fmt.Printf("could not retieve game from local repository: %s", err.Error())
