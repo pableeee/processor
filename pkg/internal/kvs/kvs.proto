@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package kvs;
+
+message KeyValuePair {
+    string key = 1;
+    bytes value = 2;
+}
+
+enum RequestType {
+    GET = 0;
+    PUT = 1;
+    DEL = 2;
+}
+
+enum ErrorCode {
+    NOT_FOUND = 0;
+    BAD_REQUEST = 1;
+    TOO_MANY_REQUESTS = 2;
+    INTERAL_ERROR = 3;
+}
+
+message Response {
+    ErrorCode code = 1;
+    string error = 2;
+}
+
+message GetRequest {
+    string key = 2;
+}
+
+message DelRequest {
+    string key = 2;
+}
+
+
+message GetResponse {
+    string key = 1;
+    repeated bytes values = 2;
+    Response error = 3;
+}
+
+message PutRequest {
+    string key = 1;
+    bytes value = 2;
+}
+
+service KVSService {
+    rpc Get(GetRequest) returns (GetResponse);
+    rpc Put(PutRequest) returns (Response);
+    rpc Del(DelRequest) returns (Response);
+}
+  
+/* SearchRequest represents a search query, with pagination options to
+ * indicate which results to include in the response. */
+
+ message SearchRequest {
+    string query = 1;
+    int32 page_number = 2;  // Which page number do we want?
+    int32 result_per_page = 3;  // Number of results to return per page.
+  }
