@@ -14,7 +14,7 @@ require (
 	github.com/nats-io/nats.go v1.10.0
 	github.com/spf13/cobra v1.0.0
 	google.golang.org/grpc v1.27.0
-	google.golang.org/protobuf v1.24.0
+	google.golang.org/protobuf v1.25.0
 	//golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	//k8s.io/api v0.19.1
 	k8s.io/apimachinery v0.19.1

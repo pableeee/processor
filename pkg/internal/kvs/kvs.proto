@@ -36,7 +36,7 @@ message DelRequest {
 
 message GetResponse {
     string key = 1;
-    repeated bytes values = 2;
+    bytes values = 2;
     Response error = 3;
 }
 
