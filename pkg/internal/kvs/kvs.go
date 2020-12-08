@@ -31,8 +31,7 @@ type routeKVSClientService struct {
 	kvsClient KVS
 }
 
-func (r *routeKVSClientService) Get(ctx context.Context, in *GetRequest,
-	opts ...grpc.CallOption) (*GetResponse, error) {
+func (r *routeKVSClientService) Get(ctx context.Context, in *GetRequest) (*GetResponse, error) {
 	if len(in.Key) == 0 {
 		return nil, ErrEmptyKey
 	}
@@ -47,7 +46,7 @@ func (r *routeKVSClientService) Get(ctx context.Context, in *GetRequest,
 	return &res, nil
 }
 
-func (r *routeKVSClientService) Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*Response, error) {
+func (r *routeKVSClientService) Del(ctx context.Context, in *DelRequest) (*Response, error) {
 	if len(in.Key) == 0 {
 		return nil, ErrEmptyKey
 	}
@@ -62,7 +61,7 @@ func (r *routeKVSClientService) Del(ctx context.Context, in *DelRequest, opts ..
 	return &res, nil
 }
 
-func (r *routeKVSClientService) Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*Response, error) {
+func (r *routeKVSClientService) Put(ctx context.Context, in *PutRequest) (*Response, error) {
 	if len(in.Key) == 0 {
 		return nil, ErrEmptyKey
 	}
@@ -92,6 +91,8 @@ func NewKVS(kvsClient KVS, port int64) (*ServerImpl, error) {
 
 	var opts []grpc.ServerOption
 	s.server = grpc.NewServer(opts...)
+	router := routeKVSClientService{kvsClient: kvsClient}
+	RegisterKVSServiceServer(s.server, &router)
 
 	return &s, nil
 }

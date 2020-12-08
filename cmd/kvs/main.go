@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -46,9 +47,54 @@ func getCommand() *cobra.Command {
 		Long:    "gets key from kvs",
 		Example: "kvs get key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 0 {
-				return ErrInvalidParams
+			key := args[0]
+
+			c, err := kvs.NewKVSClient("localhost", 33333)
+			if err != nil {
+				return err
 			}
+
+			b, err := c.Get(key)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s: %s", key, string(b))
+
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+func putCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Args:    cobra.ExactArgs(2),
+		Use:     "put",
+		Short:   "puts key from kvs",
+		Long:    "puts key from kvs",
+		Example: "kvs put key value",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			key := args[0]
+			value := args[1]
+
+			c, err := kvs.NewKVSClient("localhost", 33333)
+			if err != nil {
+				return err
+			}
+
+			b, err := json.Marshal(value)
+			if err != nil {
+				return err
+			}
+
+			err = c.Put(key, b)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s: %s", key, string(b))
 
 			return nil
 		},
@@ -104,6 +150,9 @@ func main() {
 	}
 
 	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(getCommand())
+	rootCmd.AddCommand(putCommand())
+
 	createCmd.AddCommand(newLocalKVS())
 	createCmd.AddCommand(newRedisKVS())
 
