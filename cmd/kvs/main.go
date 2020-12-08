@@ -109,12 +109,8 @@ func newRedisKVS() *cobra.Command {
 		Use:     "redis",
 		Short:   "creates redis kvs instace",
 		Long:    "creates redis kvs instace",
-		Example: "kvs create redis",
+		Example: "kvs create redis port (localhost)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return ErrInvalidParams
-			}
-
 			p, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
