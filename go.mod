@@ -13,6 +13,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.1.9 // indirect
 	github.com/nats-io/nats.go v1.10.0
 	github.com/spf13/cobra v1.0.0
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/grpc v1.27.0
 	google.golang.org/protobuf v1.25.0
 	//golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
