@@ -1,6 +1,9 @@
 package queue
 
 import (
+	"bytes"
+	"fmt"
+
 	"github.com/nats-io/nats.go"
 	"github.com/pableeee/processor/pkg/rest"
 )
@@ -20,7 +23,7 @@ func (nw *NatsPublisher) Publish(topic string, p []byte) error {
 
 	err := nw.conn.Publish(topic, p)
 	if err != nil {
-		return err
+		return fmt.Errorf("error publishing message %w", err)
 	}
 
 	nw.conn.Flush()
@@ -50,7 +53,7 @@ func (nw *NatsPublisher) Subscribe(topic string, p Pusher) error {
 		}
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error subscribing to topic %w", err)
 	}
 
 	return nil
@@ -63,20 +66,23 @@ func (nw *NatsConsumer) Close() {
 }
 
 type HTTPPusher struct {
-	client *rest.Client
-	url    string
+	client  *rest.Client
+	url     string
+	headers map[string]string
 }
 
-func NewHTTPPusher(url string) Pusher {
-	p := HTTPPusher{}
-	p.url = url
-	p.client = rest.NewRestClient()
+func NewHTTPPusher(url string, headers map[string]string) Pusher {
+	p := HTTPPusher{
+		client:  rest.NewRestClient(),
+		url:     url,
+		headers: headers,
+	}
 
 	return &p
 }
 
 func (p *HTTPPusher) Push(b []byte) error {
-	_, err := p.client.Execute("POST", p.url, nil, nil)
+	_, err := p.client.Execute("POST", p.url, bytes.NewReader(b), p.headers)
 
-	return err
+	return fmt.Errorf("error pushing to http endponint %w", err)
 }
