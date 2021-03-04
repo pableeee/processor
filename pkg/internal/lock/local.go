@@ -12,54 +12,6 @@ type localLockClient struct {
 	locks map[string]lock
 }
 
-type lock struct {
-	TTL        int
-	Resource   string
-	Origin     string
-	Token      string
-	expiration *time.Time
-}
-
-func (l *lock) expired() bool {
-	if l.TTL == 0 || l.expiration == nil {
-		return false
-	}
-
-	return l.expiration.Before(time.Now())
-}
-
-func (l *lock) GetResource() string {
-	return l.Resource
-}
-
-func (l *lock) SetResource(resource string) {
-	l.Resource = resource
-}
-
-func (l *lock) GetTTL() int {
-	return l.TTL
-}
-
-func (l *lock) SetTTL(TTL int) {
-	l.TTL = TTL
-}
-
-func (l *lock) GetOrigin() string {
-	return l.Origin
-}
-
-func (l *lock) SetOrigin(origin string) {
-	l.Origin = origin
-}
-
-func (l *lock) GetToken() string {
-	return l.Token
-}
-
-func (l *lock) SetToken(token string) {
-	l.Token = token
-}
-
 func (l *localLockClient) Get(resource string) (Lock, error) {
 	if len(resource) == 0 {
 		return nil, ErrInvalidArg
@@ -82,8 +34,8 @@ func (l *localLockClient) Get(resource string) (Lock, error) {
 	return &lck, nil
 }
 
-func (l *localLockClient) Lock(resource string, TTL int) (Lock, error) {
-	if len(resource) == 0 || TTL < 0 {
+func (l *localLockClient) Lock(resource string, ttl int) (Lock, error) {
+	if len(resource) == 0 || ttl < 0 {
 		return nil, ErrInvalidArg
 	}
 
@@ -96,9 +48,9 @@ func (l *localLockClient) Lock(resource string, TTL int) (Lock, error) {
 	}
 
 	token := uuid.New()
-	t := time.Now().Add(time.Duration(TTL) * time.Second)
+	t := time.Now().Add(time.Duration(ttl) * time.Second)
 	lck = lock{
-		TTL:        TTL,
+		TTL:        ttl,
 		Resource:   resource,
 		Origin:     "",
 		Token:      token.String(),

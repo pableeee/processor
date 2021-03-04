@@ -1,6 +1,11 @@
 package lock
 
-import "errors"
+import (
+	"errors"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Lock interface {
 	GetResource() string
@@ -25,4 +30,67 @@ var (
 	ErrLocked     = errors.New("resource locked")
 	ErrInvalidArg = errors.New("invalid arg")
 	ErrExpired    = errors.New("lock expired")
+	ErrInternal   = errors.New("internal error")
 )
+
+type lock struct {
+	TTL        int
+	Resource   string
+	Origin     string
+	Token      string
+	expiration *time.Time
+}
+
+func (l *lock) expired() bool {
+	if l.TTL == 0 || l.expiration == nil {
+		return false
+	}
+
+	return l.expiration.Before(time.Now())
+}
+
+func (l *lock) GetResource() string {
+	return l.Resource
+}
+
+func (l *lock) SetResource(resource string) {
+	l.Resource = resource
+}
+
+func (l *lock) GetTTL() int {
+	return l.TTL
+}
+
+func (l *lock) SetTTL(ttl int) {
+	l.TTL = ttl
+}
+
+func (l *lock) GetOrigin() string {
+	return l.Origin
+}
+
+func (l *lock) SetOrigin(origin string) {
+	l.Origin = origin
+}
+
+func (l *lock) GetToken() string {
+	return l.Token
+}
+
+func (l *lock) SetToken(token string) {
+	l.Token = token
+}
+
+func NewLock(resource string, ttl int) Lock {
+	token := uuid.New()
+	t := time.Now().Add(time.Duration(ttl) * time.Second)
+	lck := lock{
+		TTL:        ttl,
+		Resource:   resource,
+		Origin:     "",
+		Token:      token.String(),
+		expiration: &t,
+	}
+
+	return &lck
+}
