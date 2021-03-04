@@ -12,8 +12,15 @@ type NatsPublisher struct {
 	conn *nats.Conn
 }
 
-func NewNatsPublisher() Publisher {
-	return &NatsPublisher{}
+func NewNatsPublisher(url string) (Publisher, error) {
+	opts := []nats.Option{nats.Name("NATS Sample Publisher")}
+
+	conn, err := nats.Connect(url, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("error connecting to nats server %w", err)
+	}
+
+	return &NatsPublisher{conn: conn}, nil
 }
 
 func (nw *NatsPublisher) Publish(topic string, p []byte) error {
