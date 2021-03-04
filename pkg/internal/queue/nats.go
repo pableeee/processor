@@ -62,19 +62,21 @@ func (nw *NatsConsumer) Close() {
 	}
 }
 
-type HttpPusher struct {
+type HTTPPusher struct {
 	client *rest.Client
 	url    string
 }
 
-func NewHttpPusher(url string) Pusher {
-	p := HttpPusher{}
+func NewHTTPPusher(url string) Pusher {
+	p := HTTPPusher{}
 	p.url = url
 	p.client = rest.NewRestClient()
 
 	return &p
 }
 
-func (p *HttpPusher) Push(b []byte) error {
+func (p *HTTPPusher) Push(b []byte) error {
+	_, err := p.client.Execute("POST", p.url, nil, nil)
 
+	return err
 }
