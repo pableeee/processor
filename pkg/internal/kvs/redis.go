@@ -4,22 +4,24 @@ import (
 	"errors"
 
 	"github.com/go-redis/redis"
+	rds "github.com/pableeee/processor/pkg/internal/redis"
 )
 
 type RedisKVS struct {
 	client *redis.Client
 }
 
-func MakeRedisKVS() *RedisKVS {
+func MakeRedisKVS() (*RedisKVS, error) {
 	r := &RedisKVS{}
 
-	r.client = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	client, err := rds.MakeRedisClient("localhost", 6379)
+	if err != nil {
+		return nil, err
+	}
 
-	return r
+	r.client = client
+
+	return r, nil
 }
 
 func (r *RedisKVS) Get(k string) ([]byte, error) {
