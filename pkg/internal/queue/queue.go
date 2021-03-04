@@ -13,4 +13,15 @@ type Queue interface {
 }
 
 type Publisher interface {
+	Publish(topic string, b []byte) error
+	Close()
+}
+
+type Pusher interface {
+	Push(b []byte) error
+}
+
+type Consumer interface {
+	Subscribe(topic string, p Pusher) error
+	Close()
 }
