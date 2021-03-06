@@ -7,6 +7,7 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/alan/del"
 	"github.com/pableeee/processor/pkg/cmd/alan/get"
 	"github.com/pableeee/processor/pkg/cmd/alan/put"
+	"github.com/pableeee/processor/pkg/cmd/alan/write"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,7 @@ func main() {
 	rootCmd.AddCommand(get.NewCommand())
 	rootCmd.AddCommand(put.NewCommand())
 	rootCmd.AddCommand(del.NewCommand())
+	rootCmd.AddCommand(write.NewCommand())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("Error: %s\n", err.Error())

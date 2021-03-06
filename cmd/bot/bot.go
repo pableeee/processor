@@ -12,13 +12,37 @@ import (
 
 	"github.com/Lukaesebrot/dgc"
 	"github.com/bwmarrin/discordgo"
+	"github.com/pableeee/processor/pkg/queue"
 )
 
 const (
-	url = "http://127.0.0.1:8000/game/%s"
+	url   = "http://127.0.0.1:8000/game/%s"
+	token = "NjE5Nzc3OTM3Njc1MTI0NzQ2.XXNLLw.NOqMhZidyoYt5fMFnMGQTW_lBAc"
 )
 
 func main() {
+	c, err := queue.NewNatsConsumer("127.0.0.1", 5555)
+	if err != nil {
+		log.Fatalf("error creating consumer: %s", err.Error())
+	}
+
+	defer c.Close()
+
+	p, err := queue.NewDiscordPusher(token, "580712338513199115")
+	if err != nil {
+		log.Fatalf("error creating consumer: %s", err.Error())
+	}
+
+	err = c.Subscribe("test", p)
+	if err != nil {
+		log.Fatalf("error creating consumer: %s", err.Error())
+	}
+
+	cc := make(chan struct{})
+	<-cc
+}
+
+func main1() {
 	Main()
 }
 
