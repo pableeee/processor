@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Lukaesebrot/dgc v1.0.6
+	github.com/RediSearch/redisearch-go v1.1.0
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang/protobuf v1.4.2
