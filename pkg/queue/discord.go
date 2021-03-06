@@ -30,14 +30,14 @@ func WithSession(session *discordgo.Session, channelID string) (Pusher, error) {
 }
 
 func (d *DiscordPusher) Close() {
-	d.Close()
+	d.session.Close()
 }
 
-func (d *DiscordPusher) Push(b []byte) error {
-	_, err := d.session.ChannelMessageSend(d.channel, string(b))
+func (d *DiscordPusher) Push(b []byte) ([]byte, error) {
+	st, err := d.session.ChannelMessageSend(d.channel, string(b))
 	if err != nil {
-		return fmt.Errorf("error sending message %w", err)
+		return nil, fmt.Errorf("error sending message %w", err)
 	}
 
-	return nil
+	return []byte(st.Content), nil
 }

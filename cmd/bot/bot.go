@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	url   = "http://127.0.0.1:8000/game/%s"
-	token = "NjE5Nzc3OTM3Njc1MTI0NzQ2.XXNLLw.NOqMhZidyoYt5fMFnMGQTW_lBAc"
+	url = "http://127.0.0.1:8000/game/%s"
 )
 
 func main() {
@@ -25,6 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error creating consumer: %s", err.Error())
 	}
+	token := os.Getenv("token")
 
 	defer c.Close()
 

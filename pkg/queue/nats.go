@@ -3,6 +3,7 @@ package queue
 import (
 	"bytes"
 	"fmt"
+	"log"
 
 	"github.com/nats-io/nats.go"
 	"github.com/pableeee/processor/pkg/rest"
@@ -63,14 +64,15 @@ func NewNatsConsumer(address string, port int) (Consumer, error) {
 
 func (nw *NatsPublisher) Subscribe(topic string, p Pusher) error {
 	_, err := nw.conn.Subscribe(topic, func(msg *nats.Msg) {
-		er := p.Push(msg.Data)
+		rsp, er := p.Push(msg.Data)
 		if er != nil {
-			// si falla el procesamiento, vuelvo a reencolar
-			go func() {
-				_ = nw.conn.Publish(topic, msg.Data)
-				// que pasa si no puedo reencolar??
-				// o usar nates reply
-			}()
+			// si falla el procesamiento, no hago el reply
+			return
+		}
+
+		er = msg.Respond(rsp)
+		if er != nil {
+			log.Println("could not respond to message")
 		}
 	})
 	if err != nil {
@@ -106,8 +108,11 @@ func (p *HTTPPusher) Close() {
 
 }
 
-func (p *HTTPPusher) Push(b []byte) error {
-	_, err := p.client.Execute("POST", p.url, bytes.NewReader(b), p.headers)
+func (p *HTTPPusher) Push(b []byte) ([]byte, error) {
+	resp, err := p.client.Execute("POST", p.url, bytes.NewReader(b), p.headers)
+	if err != nil {
+		return nil, fmt.Errorf("error pushing to http endponint %w", err)
+	}
 
-	return fmt.Errorf("error pushing to http endponint %w", err)
+	return []byte(resp), nil
 }
