@@ -24,6 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error creating consumer: %s", err.Error())
 	}
+
 	token := os.Getenv("token")
 
 	defer c.Close()
