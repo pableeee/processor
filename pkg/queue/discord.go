@@ -29,6 +29,10 @@ func WithSession(session *discordgo.Session, channelID string) (Pusher, error) {
 	return &DiscordPusher{session: session, channel: channelID}, nil
 }
 
+func (d *DiscordPusher) Close() {
+	d.Close()
+}
+
 func (d *DiscordPusher) Push(b []byte) error {
 	_, err := d.session.ChannelMessageSend(d.channel, string(b))
 	if err != nil {

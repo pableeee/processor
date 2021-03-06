@@ -102,6 +102,10 @@ func NewHTTPPusher(url string, headers map[string]string) Pusher {
 	return &p
 }
 
+func (p *HTTPPusher) Close() {
+
+}
+
 func (p *HTTPPusher) Push(b []byte) error {
 	_, err := p.client.Execute("POST", p.url, bytes.NewReader(b), p.headers)
 

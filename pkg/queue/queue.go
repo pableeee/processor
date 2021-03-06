@@ -19,6 +19,7 @@ type Publisher interface {
 
 type Pusher interface {
 	Push(b []byte) error
+	Close()
 }
 
 type Consumer interface {
