@@ -27,8 +27,6 @@ func main() {
 
 	token := os.Getenv("token")
 
-	defer c.Close()
-
 	p, err := queue.NewDiscordPusher(token, "580712338513199115")
 	if err != nil {
 		log.Fatalf("error creating consumer: %s", err.Error())
@@ -39,8 +37,14 @@ func main() {
 		log.Fatalf("error creating consumer: %s", err.Error())
 	}
 
-	cc := make(chan struct{})
-	<-cc
+	defer func() {
+		sc := make(chan os.Signal, 1)
+		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+		<-sc
+
+		c.Close()
+		p.Close()
+	}()
 }
 
 func main1() {
