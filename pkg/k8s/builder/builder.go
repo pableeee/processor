@@ -1,67 +1,125 @@
 package builder
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 
-	"github.com/alexellis/arkade/pkg/apps"
-	"github.com/alexellis/arkade/pkg/types"
+	"github.com/pableeee/processor/pkg/internal/kvs"
+	"github.com/pableeee/processor/pkg/internal/lock"
+	"github.com/pableeee/processor/pkg/k8s/provider"
+	"github.com/pableeee/processor/pkg/k8s/provider/types"
 )
 
-type InfraProvider interface {
-	BuildKVS(id string) error
-	BuildLock(id string) error
-	BuildQueue(id string) error
+type Implementation struct {
+	Repo string
+	URL  string
 }
 
-func NewInfraProvider() InfraProvider {
-	return &defaultInfraProvider{}
+type Configuration struct {
+	URL  string
+	Port int
 }
 
-type defaultInfraProvider struct {
+type Service struct {
+	Name   string
+	Type   types.ServiceType
+	Chart  Implementation
+	Config Configuration
 }
 
-func (d *defaultInfraProvider) BuildQueue(id string) error {
-	return BuildRedisNats()
+type Model struct {
+	// Project name
+	Project string
+
+	// Github repo url
+	Repo string
+
+	//
+	URL string
+
+	//
+	ServivceName string
+
+	//
+	Type types.ServiceType
 }
 
-func (d *defaultInfraProvider) BuildKVS(id string) error {
-	return BuildRedisKVS()
-}
-func (d *defaultInfraProvider) BuildLock(id string) error {
-	return BuildRedisKVS()
+type Builder struct {
+	// Configuration data
+
+	// Service map
+	services kvs.KVS
+
+	// Distributed Locks
+	lck lock.Client
+
+	// Client to build infra
+	provider provider.InfraProvider
 }
 
-func BuildRedisKVS() error {
-	redisAppOptions := types.DefaultInstallOptions().
-		WithNamespace("namespace").
-		WithHelmRepo("bitnami-redis/redis").
-		WithHelmURL("https://charts.bitnami.com/bitnami").
-		WithOverrides(nil).
-		WithWait(false).
-		WithHelmUpdateRepo(false).
-		WithKubeconfigPath("kubeConfigPath")
+func (b *Builder) BuildKVS(m Model) error {
+	return b.buildService(m.Project, m.ServivceName, m.Type,
+		func() error {
+			return b.provider.BuildKVS(m.ServivceName)
+		})
+}
 
-	_, err := apps.MakeInstallChart(redisAppOptions)
-	if err != nil {
-		return fmt.Errorf("fail applying redis chart: %v", err)
+func (b *Builder) BuildLock(m Model) error {
+	return b.buildService(m.Project, m.ServivceName, m.Type,
+		func() error {
+			return b.provider.BuildLock(m.ServivceName)
+		})
+}
+
+func (b *Builder) BuildQueue(m Model) error {
+	return b.buildService(m.Project, m.ServivceName, m.Type,
+		func() error {
+			return b.provider.BuildQueue(m.ServivceName)
+		})
+}
+
+func (b *Builder) buildService(ns, id string, t types.ServiceType,
+	f func() error) error {
+	if len(id) < 3 {
+		// Ids mix 3 char
+		return fmt.Errorf("invalid argument")
 	}
 
-	return nil
-}
+	key := fmt.Sprintf("kvs:%s", id)
 
-func BuildRedisNats() error {
-	redisAppOptions := types.DefaultInstallOptions().
-		WithNamespace("namespace").
-		WithHelmRepo("nats/nats").
-		WithHelmURL("https://nats-io.github.io/k8s/helm/charts/").
-		WithOverrides(nil).
-		WithWait(false).
-		WithHelmUpdateRepo(false).
-		WithKubeconfigPath("kubeConfigPath")
-
-	_, err := apps.MakeInstallChart(redisAppOptions)
+	l, err := b.lck.Lock(key, 50)
 	if err != nil {
-		return fmt.Errorf("fail applying nats chart: %v", err)
+		return fmt.Errorf("failed locking id: %w", err)
+	}
+
+	defer func() {
+		err = b.lck.Unlock(l)
+		if err != nil {
+			log.Println("incrementar metrica")
+		}
+	}()
+
+	err = f()
+	if err != nil {
+		return fmt.Errorf("failed building kvs : %w", err)
+	}
+
+	s := Service{
+		Name: fmt.Sprintf("%s_%s_%s", t, ns, id),
+		Type: t,
+	}
+
+	bts, err := json.Marshal(s)
+	if err != nil {
+		// TODO borrar la infra creada?
+		return fmt.Errorf("failed marshaling: %w", err)
+	}
+
+	err = b.services.Put(s.Name, bts)
+	if err != nil {
+		// TODO borrar la infra creada?
+		return fmt.Errorf("failed updating kvs: %w", err)
 	}
 
 	return nil
