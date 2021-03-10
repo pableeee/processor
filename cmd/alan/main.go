@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/pableeee/processor/pkg/cmd/alan/del"
 	"github.com/pableeee/processor/pkg/cmd/alan/get"
 	"github.com/pableeee/processor/pkg/cmd/alan/put"
+	"github.com/pableeee/processor/pkg/cmd/alan/svc"
 	"github.com/pableeee/processor/pkg/cmd/alan/write"
 	"github.com/spf13/cobra"
 )
@@ -23,9 +24,10 @@ func main() {
 	rootCmd.AddCommand(put.NewCommand())
 	rootCmd.AddCommand(del.NewCommand())
 	rootCmd.AddCommand(write.NewCommand())
+	rootCmd.AddCommand(svc.NewCommand())
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Printf("Error: %s\n", err.Error())
 		os.Exit(1)
 	}
 

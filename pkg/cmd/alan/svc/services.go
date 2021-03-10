@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -143,7 +144,7 @@ func runPut(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to read server response")
 	}
 
-	fmt.Printf("%s", b)
+	log.Printf("%s", b)
 
 	return nil
 }
