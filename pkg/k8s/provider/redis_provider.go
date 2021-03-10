@@ -20,14 +20,15 @@ type Model struct {
 	Port int
 }
 
-func NewInfraProvider() InfraProvider {
-	return &defaultInfraProvider{}
+func NewInfraProvider(cfg string) InfraProvider {
+	return &defaultInfraProvider{config: cfg}
 }
 
 type defaultInfraProvider struct {
+	config string
 }
 
-func (d *defaultInfraProvider) install(cfg string, data Model) error {
+func (d *defaultInfraProvider) install(data Model) error {
 	options := types.DefaultInstallOptions().
 		WithNamespace(data.Name).
 		WithHelmRepo(data.Repo).
@@ -35,7 +36,7 @@ func (d *defaultInfraProvider) install(cfg string, data Model) error {
 		WithOverrides(nil).
 		WithWait(false).
 		WithHelmUpdateRepo(false).
-		WithKubeconfigPath(cfg)
+		WithKubeconfigPath(d.config)
 
 	_, err := apps.MakeInstallChart(options)
 	if err != nil {
@@ -46,7 +47,7 @@ func (d *defaultInfraProvider) install(cfg string, data Model) error {
 }
 
 func (d *defaultInfraProvider) BuildLock(id string) error {
-	err := d.install("",
+	err := d.install(
 		Model{
 			Name: id,
 			Repo: "bitnami-redis/redis",
@@ -63,7 +64,7 @@ func (d *defaultInfraProvider) BuildLock(id string) error {
 }
 
 func (d *defaultInfraProvider) BuildKVS(id string) error {
-	err := d.install("",
+	err := d.install(
 		Model{
 			Name: id,
 			Repo: "bitnami-redis/redis",
@@ -79,12 +80,13 @@ func (d *defaultInfraProvider) BuildKVS(id string) error {
 }
 
 func (d *defaultInfraProvider) BuildQueue(id string) error {
-	err := d.install("", Model{
-		Name: id,
-		Repo: "https://nats-io.github.io/k8s/helm/charts/",
-		URL:  "nats/nats",
-		Port: 4444,
-	})
+	err := d.install(
+		Model{
+			Name: id,
+			Repo: "https://nats-io.github.io/k8s/helm/charts/",
+			URL:  "nats/nats",
+			Port: 4444,
+		})
 	if err != nil {
 		return fmt.Errorf("fail applying redis chart: %v", err)
 	}

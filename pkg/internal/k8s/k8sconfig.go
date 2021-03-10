@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"k8s.io/client-go/dynamic"
@@ -10,6 +11,20 @@ import (
 )
 
 var ErrorNoConfig = fmt.Errorf("no kubeconfig provided")
+
+func GetKubeConfig() (string, error) {
+	home := homedir.HomeDir()
+	if home == "" {
+		return "", ErrorNoConfig
+	}
+
+	kubeconfig := filepath.Join(home, ".kube", "config")
+	if _, err := os.Stat(kubeconfig); err != nil {
+		return "", ErrorNoConfig
+	}
+
+	return kubeconfig, nil
+}
 
 func NewConfigSetup(cfg string, namespace string) (string, dynamic.Interface, error) {
 	var kubeconfig string

@@ -58,6 +58,10 @@ type Builder struct {
 	provider provider.InfraProvider
 }
 
+func NewBuilder(p provider.InfraProvider) *Builder {
+	return &Builder{provider: p}
+}
+
 func (b *Builder) BuildKVS(m Model) error {
 	return b.buildService(m.Project, m.ServivceName, m.Type,
 		func() error {

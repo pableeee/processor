@@ -17,3 +17,7 @@ func main1() {
 
 	fmt.Printf("Game created!\n%#v", s)
 }
+
+func main() {
+
+}
