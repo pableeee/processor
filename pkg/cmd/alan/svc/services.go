@@ -10,6 +10,10 @@ import (
 
 	guuid "github.com/google/uuid"
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
+	"github.com/pableeee/processor/pkg/internal/k8s"
+	"github.com/pableeee/processor/pkg/k8s/builder"
+	"github.com/pableeee/processor/pkg/k8s/provider"
+	"github.com/pableeee/processor/pkg/k8s/provider/types"
 	"github.com/spf13/cobra"
 )
 
@@ -28,12 +32,100 @@ func NewCommand() *cobra.Command {
 	root := newCommand("service", nil)
 	create := newCommand("create", nil)
 
-	create.AddCommand(newCommand("lock", nil))
+	create.AddCommand(newCommand("lock", func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		repo := args[1]
+		url := args[2]
+		service := args[3]
+
+		kubeconfig, err := k8s.GetKubeConfig()
+		if err != nil {
+			return fmt.Errorf("failed getting kubeconfig path: %w", err)
+		}
+
+		p := provider.NewInfraProvider(kubeconfig)
+
+		err = builder.NewBuilder(p).BuildLock(builder.Model{
+			Project:      name,
+			Repo:         repo,
+			URL:          url,
+			ServivceName: service,
+			Type:         types.Lock,
+		},
+		)
+
+		return fmt.Errorf("failed building lock service: %w", err)
+	}))
+
 	create.AddCommand(newCommand("kvs", nil))
 	create.AddCommand(newCommand("queue", nil))
 	root.AddCommand(create)
 
 	return root
+}
+
+func buildLockCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "lock",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			repo := args[1]
+			url := args[2]
+			service := args[3]
+
+			kubeconfig, err := k8s.GetKubeConfig()
+			if err != nil {
+				return fmt.Errorf("failed getting kubeconfig path: %w", err)
+			}
+
+			p := provider.NewInfraProvider(kubeconfig)
+
+			err = builder.NewBuilder(p).BuildKVS(builder.Model{
+				Project:      name,
+				Repo:         repo,
+				URL:          url,
+				ServivceName: service,
+				Type:         types.Lock,
+			},
+			)
+
+			return fmt.Errorf("failed building lock service: %w", err)
+		},
+	}
+
+	return cmd
+}
+
+func newBuildCommand(use string, f func(b *builder.Builder, m builder.Model) error) *cobra.Command {
+	cmd := &cobra.Command{
+		Use: use,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			repo := args[1]
+			url := args[2]
+			service := args[3]
+
+			kubeconfig, err := k8s.GetKubeConfig()
+			if err != nil {
+				return fmt.Errorf("failed getting kubeconfig path: %w", err)
+			}
+
+			p := provider.NewInfraProvider(kubeconfig)
+			b := builder.NewBuilder(p)
+			err = f(b, builder.Model{
+				Project:      name,
+				Repo:         repo,
+				URL:          url,
+				ServivceName: service,
+				Type:         types.Lock,
+			},
+			)
+
+			return fmt.Errorf("failed building lock service: %w", err)
+		},
+	}
+
+	return cmd
 }
 
 func newCommand(use string, f func(cmd *cobra.Command, args []string) error) *cobra.Command {
