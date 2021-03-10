@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/Lukaesebrot/dgc v1.0.6
-	github.com/alexellis/arkade v0.0.0-20210306173237-59b30d8df2cf // indirect
+	github.com/alexellis/arkade v0.0.0-20210306173237-59b30d8df2cf
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible

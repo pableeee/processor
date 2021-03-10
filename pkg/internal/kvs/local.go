@@ -14,6 +14,15 @@ type LocalKVS struct {
 	mux *sync.Mutex
 }
 
+func NewLocal() KVS {
+	k := LocalKVS{}
+	m := make(map[string][]byte)
+	k.db = &m
+	k.mux = &sync.Mutex{}
+
+	return &k
+}
+
 // Get implements a local get service.
 func (infra *LocalKVS) Get(k string) ([]byte, error) {
 	if len(k) == 0 {

@@ -58,8 +58,26 @@ type Builder struct {
 	provider provider.InfraProvider
 }
 
-func NewBuilder(p provider.InfraProvider) *Builder {
-	return &Builder{provider: p}
+func NewBuilder() *Builder {
+	return &Builder{}
+}
+
+func (b *Builder) WithProvider(p provider.InfraProvider) *Builder {
+	b.provider = p
+
+	return b
+}
+
+func (b *Builder) WithLock(l lock.Client) *Builder {
+	b.lck = l
+
+	return b
+}
+
+func (b *Builder) WithKVS(k kvs.KVS) *Builder {
+	b.services = k
+
+	return b
 }
 
 func (b *Builder) BuildKVS(m Model) error {

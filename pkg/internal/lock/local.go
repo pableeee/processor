@@ -12,6 +12,14 @@ type localLockClient struct {
 	locks map[string]lock
 }
 
+func NewLocal() Client {
+	lck := localLockClient{}
+	lck.mux = &sync.RWMutex{}
+	lck.locks = make(map[string]lock)
+
+	return &lck
+}
+
 func (l *localLockClient) Get(resource string) (Lock, error) {
 	if len(resource) == 0 {
 		return nil, ErrInvalidArg

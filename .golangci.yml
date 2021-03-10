@@ -11,3 +11,4 @@ linters:
   disable:
     - unused
     - funlen
+    - exhaustivestruct

@@ -1,26 +1,15 @@
 package svc
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"time"
 
-	guuid "github.com/google/uuid"
-	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 	"github.com/pableeee/processor/pkg/internal/k8s"
+	"github.com/pableeee/processor/pkg/internal/kvs"
+	"github.com/pableeee/processor/pkg/internal/lock"
 	"github.com/pableeee/processor/pkg/k8s/builder"
 	"github.com/pableeee/processor/pkg/k8s/provider"
 	"github.com/pableeee/processor/pkg/k8s/provider/types"
 	"github.com/spf13/cobra"
-)
-
-const (
-	url         = "http://127.0.0.1:8000/game/"
-	contentType = "application/json"
 )
 
 var (
@@ -28,7 +17,7 @@ var (
 	ErrorMarshalling = fmt.Errorf("unable to marshal info to backend")
 )
 
-// NewCommand returns a new cobra.Command for cluster creation
+// NewCommand returns a new cobra.Command for cluster creation.
 func NewCommand() *cobra.Command {
 	root := newCommand("service", nil)
 	create := newCommand("create", nil)
@@ -85,7 +74,10 @@ func buildCommand(use, example string, f func(b *builder.Builder, m builder.Mode
 			}
 
 			p := provider.NewInfraProvider(kubeconfig)
-			b := builder.NewBuilder(p)
+			b := builder.NewBuilder().
+				WithProvider(p).
+				WithLock(lock.NewLocal()).
+				WithKVS(kvs.NewLocal())
 
 			if err = f(b, builder.Model{
 				Project:      name,
@@ -111,40 +103,4 @@ func newCommand(use string, f func(cmd *cobra.Command, args []string) error) *co
 	}
 
 	return cmd
-}
-
-func runPut(cmd *cobra.Command, args []string) error {
-	userID := args[0]
-	game := args[1]
-
-	id := guuid.New()
-
-	s := infra.Server{Game: game, CreatedAt: time.Now(), GameID: id.String(), Owner: userID}
-
-	if len(userID) == 0 || len(game) == 0 {
-		return ErrorInvalidArgs
-	}
-
-	j, err := json.Marshal(s)
-	if err != nil {
-		return ErrorMarshalling
-	}
-
-	r := bytes.NewReader(j)
-
-	resp, err := http.Post(url, contentType, r)
-	if err != nil || resp.StatusCode != http.StatusCreated {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("unable to read server response")
-	}
-
-	log.Printf("%s", b)
-
-	return nil
 }
