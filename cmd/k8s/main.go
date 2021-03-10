@@ -7,7 +7,7 @@ import (
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
 )
 
-func main() {
+func main1() {
 	infra := infra.MakeNewInfra()
 
 	s, err := infra.CreateServer("pable", "cs16")
