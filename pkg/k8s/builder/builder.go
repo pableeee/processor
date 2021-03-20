@@ -45,6 +45,10 @@ type Model struct {
 	Type types.ServiceType
 }
 
+type Services interface {
+	Get(k string) ([]byte, error)
+}
+
 type Builder struct {
 	// Configuration data
 
@@ -60,6 +64,10 @@ type Builder struct {
 
 func NewBuilder() *Builder {
 	return &Builder{}
+}
+
+func (b *Builder) GetServices() Services {
+	return b.services
 }
 
 func (b *Builder) WithProvider(p provider.InfraProvider) *Builder {
