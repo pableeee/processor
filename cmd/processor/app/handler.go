@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pableeee/processor/pkg/cmd/processor/infra"
+	"github.com/pableeee/processor/pkg/k8s/builder"
 )
 
 var (
@@ -18,17 +19,57 @@ var (
 	ErrorDeletingServer = fmt.Errorf("coulnd delete server")
 )
 
+const (
+	proyectID = "projectID"
+)
+
 type requestHandler struct {
 	handler infra.InfraManager
+	builder builder.Builder
 }
 
-func (rh *requestHandler) handleUserGet(w http.ResponseWriter, r *http.Request) error {
+func (rh *requestHandler) handleProyectGet(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	if vars == nil {
 		return ErrorUserMissing
 	}
 
-	own, found := vars["userID"]
+	own, found := vars[proyectID]
+	if !found {
+		return ErrorUserMissing
+	}
+
+	project, err := rh.builder.GetProyect(own)
+	if err != nil {
+		return ErrorRetrieve
+	}
+
+	resp := map[string]interface{}{
+		"name":         project.Project,
+		"repo":         project.Repo,
+		"url":          project.URL,
+		"service-name": project.ServivceName,
+		"type":         project.Type,
+	}
+
+	b, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, string(b))
+
+	return nil
+}
+
+func (rh *requestHandler) handleProyectPost(w http.ResponseWriter, r *http.Request) error {
+	vars := mux.Vars(r)
+	if vars == nil {
+		return ErrorUserMissing
+	}
+
+	own, found := vars[proyectID]
 	if !found {
 		return ErrorUserMissing
 	}

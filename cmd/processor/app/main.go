@@ -17,13 +17,21 @@ var handler requestHandler
 
 func addHandlers(r *mux.Router) {
 	// handles get games requests
-	r.HandleFunc("/user/{userID}", func(w http.ResponseWriter, r *http.Request) {
-		err := handler.handleUserGet(w, r)
+	r.HandleFunc(fmt.Sprintf("/project/{%s}", proyectID), func(w http.ResponseWriter, r *http.Request) {
+		err := handler.handleProyectGet(w, r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err.Error())
 		}
 	}).Methods("GET")
+
+	r.HandleFunc(fmt.Sprintf("/project/{%s}", proyectID), func(w http.ResponseWriter, r *http.Request) {
+		err := handler.handleProyectGet(w, r)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err.Error())
+		}
+	}).Methods("POST")
 
 	// handles get games requests
 	r.HandleFunc("/game/{gameID}", func(w http.ResponseWriter, r *http.Request) {

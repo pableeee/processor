@@ -1,6 +1,6 @@
 module github.com/pableeee/processor
 
-go 1.14
+go 1.15
 
 require (
 	github.com/Lukaesebrot/dgc v1.0.6

@@ -70,6 +70,21 @@ func (b *Builder) GetServices() Services {
 	return b.services
 }
 
+func (b *Builder) GetProyect(id string) (Model, error) {
+	var m Model
+
+	bts, err := b.services.Get(id)
+	if err != nil {
+		return m, fmt.Errorf("failed getting project: %s %w", id, err)
+	}
+
+	if err = json.Unmarshal(bts, &m); err != nil {
+		return m, fmt.Errorf("failed unmasharling project: %s %w", id, err)
+	}
+
+	return m, nil
+}
+
 func (b *Builder) WithProvider(p provider.InfraProvider) *Builder {
 	b.provider = p
 
@@ -130,8 +145,7 @@ func (b *Builder) buildService(ns, id string, t types.ServiceType,
 		}
 	}()
 
-	err = f()
-	if err != nil {
+	if err = f(); err != nil {
 		return fmt.Errorf("failed building kvs : %w", err)
 	}
 
@@ -146,8 +160,7 @@ func (b *Builder) buildService(ns, id string, t types.ServiceType,
 		return fmt.Errorf("failed marshaling: %w", err)
 	}
 
-	err = b.services.Put(s.Name, bts)
-	if err != nil {
+	if err = b.services.Put(s.Name, bts); err != nil {
 		// TODO borrar la infra creada?
 		return fmt.Errorf("failed updating kvs: %w", err)
 	}
