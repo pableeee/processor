@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/pableeee/processor/pkg/internal/k8s"
-	"github.com/pableeee/processor/pkg/internal/lock"
 	"github.com/pableeee/processor/pkg/k8s/builder"
 	"github.com/pableeee/processor/pkg/k8s/provider"
 	"github.com/pableeee/processor/pkg/k8s/provider/types"
 	"github.com/pableeee/processor/pkg/kvs"
+	"github.com/pableeee/processor/pkg/lock"
 	"github.com/spf13/cobra"
 )
 
