@@ -5,9 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gorilla/mux"
 	ht "github.com/pableeee/processor/pkg/http"
+	"github.com/pableeee/processor/pkg/repository"
 	rep "github.com/pableeee/processor/pkg/repository"
 )
 
@@ -26,6 +30,27 @@ type User struct {
 	Username string
 	Mail     string
 	Profile  Profile
+}
+
+func (s *UserService) Start() error {
+	// Wait for the user to cancel the process
+	if s.sv == nil {
+		return fmt.Errorf("server not configured")
+	}
+
+	if err := s.sv.ListenAndServe(); err != nil {
+		return fmt.Errorf("faild starting server %w", err)
+	}
+
+	defer func() {
+		sc := make(chan os.Signal, 1)
+		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+		<-sc
+		// Close server on SIGINT
+		s.sv.Close()
+	}()
+
+	return nil
 }
 
 func handleGet(s *UserService, r *http.Request) ([]byte, error) {
@@ -73,8 +98,9 @@ func handlePost(s *UserService, r *http.Request) ([]byte, error) {
 	return nil, nil
 }
 
-func NewUserService() *UserService {
+func NewUserService(k kvs.KVS) *UserService {
 	s := &UserService{}
+	s.repo = repository.WithKVS(k)
 	s.sv = ht.DefaultBuilder().
 		WithAddress("0.0.0.0").
 		WithHandlerSetUp(
