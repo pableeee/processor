@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pableeee/processor/pkg/internal/kvs"
+	"github.com/pableeee/processor/pkg/kvs"
 )
 
 var (

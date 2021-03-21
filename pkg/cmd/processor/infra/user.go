@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pableeee/processor/pkg/internal/kvs"
+	"github.com/pableeee/processor/pkg/kvs"
 )
 
 // UserKVS for local tests

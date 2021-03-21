@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pableeee/processor/pkg/internal/kvs"
 	"github.com/pableeee/processor/pkg/internal/lock"
 	"github.com/pableeee/processor/pkg/k8s/provider"
 	"github.com/pableeee/processor/pkg/k8s/provider/types"
+	"github.com/pableeee/processor/pkg/kvs"
 )
 
 type Implementation struct {

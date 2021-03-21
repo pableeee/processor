@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	ukvs "github.com/pableeee/processor/pkg/internal/kvs"
+	ukvs "github.com/pableeee/processor/pkg/kvs"
 	"google.golang.org/grpc"
 )
 

@@ -2,6 +2,7 @@ package app
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	ht "github.com/pableeee/processor/pkg/http"
+	"github.com/pableeee/processor/pkg/kvs"
 	"github.com/pableeee/processor/pkg/repository"
 	rep "github.com/pableeee/processor/pkg/repository"
 )
@@ -21,15 +23,15 @@ type UserService struct {
 }
 
 type Profile struct {
-	Type  string
-	Group string
+	Type  string `json:"type,omitempty"`
+	Group string `json:"group,omitempty"`
 }
 
 type User struct {
-	ID       uint64
-	Username string
-	Mail     string
-	Profile  Profile
+	ID       uint64  `json:"id,omitempty"`
+	Username string  `json:"username,omitempty"`
+	Mail     string  `json:"mail,omitempty"`
+	Profile  Profile `json:"profile,omitempty"`
 }
 
 func (s *UserService) Start() error {
@@ -38,17 +40,18 @@ func (s *UserService) Start() error {
 		return fmt.Errorf("server not configured")
 	}
 
-	if err := s.sv.ListenAndServe(); err != nil {
-		return fmt.Errorf("faild starting server %w", err)
-	}
-
-	defer func() {
+	go func() {
 		sc := make(chan os.Signal, 1)
 		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 		<-sc
 		// Close server on SIGINT
-		s.sv.Close()
+		ctx := context.Background()
+		s.sv.Shutdown(ctx)
 	}()
+
+	if err := s.sv.ListenAndServe(); err != nil {
+		return fmt.Errorf("faild starting server %w", err)
+	}
 
 	return nil
 }
@@ -57,7 +60,7 @@ func handleGet(s *UserService, r *http.Request) ([]byte, error) {
 	var usr User
 
 	vars := mux.Vars(r)
-	id := vars["kvsID"]
+	id := vars["ID"]
 
 	if err := s.repo.Get(id, &usr); err != nil {
 		return nil, fmt.Errorf("failed getting user %s: %w", id, err)
@@ -103,6 +106,7 @@ func NewUserService(k kvs.KVS) *UserService {
 	s.repo = repository.WithKVS(k)
 	s.sv = ht.DefaultBuilder().
 		WithAddress("0.0.0.0").
+		WithPort(8888).
 		WithHandlerSetUp(
 			func(r *mux.Router) {
 				// Handles GET
@@ -136,6 +140,7 @@ func NewUserService(k kvs.KVS) *UserService {
 					_, err := handlePost(s, r)
 					if err != nil {
 						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(err.Error()))
 
 						return
 					}
