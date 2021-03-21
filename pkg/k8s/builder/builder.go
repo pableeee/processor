@@ -1,14 +1,11 @@
 package builder
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/pableeee/processor/pkg/k8s/provider"
 	"github.com/pableeee/processor/pkg/k8s/provider/types"
-	"github.com/pableeee/processor/pkg/kvs"
-	"github.com/pableeee/processor/pkg/lock"
+	"github.com/pableeee/processor/pkg/repository"
 )
 
 type Implementation struct {
@@ -51,12 +48,7 @@ type Services interface {
 
 type Builder struct {
 	// Configuration data
-
-	// Service map
-	services kvs.KVS
-
-	// Distributed Locks
-	lck lock.Client
+	repo repository.Repository
 
 	// Client to build infra
 	provider provider.InfraProvider
@@ -66,20 +58,23 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (b *Builder) GetServices() Services {
-	return b.services
+func (b *Builder) GetService(proj, name string, t types.ServiceType) (Model, error) {
+	var m Model
+
+	key := fmt.Sprintf("%s:%s_%s", proj, t, name)
+	if err := b.repo.Get(key, &m); err != nil {
+		return m, fmt.Errorf("failed retrieving service: %s %w", key, err)
+	}
+
+	return m, nil
 }
 
 func (b *Builder) GetProyect(id string) (Model, error) {
 	var m Model
 
-	bts, err := b.services.Get(id)
+	err := b.repo.Get(id, &m)
 	if err != nil {
 		return m, fmt.Errorf("failed getting project: %s %w", id, err)
-	}
-
-	if err = json.Unmarshal(bts, &m); err != nil {
-		return m, fmt.Errorf("failed unmasharling project: %s %w", id, err)
 	}
 
 	return m, nil
@@ -91,14 +86,8 @@ func (b *Builder) WithProvider(p provider.InfraProvider) *Builder {
 	return b
 }
 
-func (b *Builder) WithLock(l lock.Client) *Builder {
-	b.lck = l
-
-	return b
-}
-
-func (b *Builder) WithKVS(k kvs.KVS) *Builder {
-	b.services = k
+func (b *Builder) WithRepository(r repository.Repository) *Builder {
+	b.repo = r
 
 	return b
 }
@@ -131,38 +120,18 @@ func (b *Builder) buildService(ns, id string, t types.ServiceType,
 		return fmt.Errorf("invalid argument")
 	}
 
-	key := fmt.Sprintf("kvs:%s", id)
-
-	l, err := b.lck.Lock(key, 50)
-	if err != nil {
-		return fmt.Errorf("failed locking id: %w", err)
-	}
-
-	defer func() {
-		err = b.lck.Unlock(l)
-		if err != nil {
-			log.Println("incrementar metrica")
-		}
-	}()
-
-	if err = f(); err != nil {
+	if err := f(); err != nil {
 		return fmt.Errorf("failed building kvs : %w", err)
 	}
 
 	s := Service{
-		Name: fmt.Sprintf("%s_%s_%s", t, ns, id),
+		Name: fmt.Sprintf("%s:%s_%s", ns, t, id),
 		Type: t,
 	}
 
-	bts, err := json.Marshal(s)
-	if err != nil {
+	if err := b.repo.Save(s.Name, s); err != nil {
 		// TODO borrar la infra creada?
-		return fmt.Errorf("failed marshaling: %w", err)
-	}
-
-	if err = b.services.Put(s.Name, bts); err != nil {
-		// TODO borrar la infra creada?
-		return fmt.Errorf("failed updating kvs: %w", err)
+		return fmt.Errorf("failed saving service: %w", err)
 	}
 
 	return nil

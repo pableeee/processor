@@ -1,14 +1,16 @@
 package jet
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/pableeee/processor/pkg/k8s/builder"
 	"github.com/pableeee/processor/pkg/k8s/provider"
+	"github.com/pableeee/processor/pkg/k8s/provider/types"
 	"github.com/pableeee/processor/pkg/kvs"
-	"github.com/pableeee/processor/pkg/lock"
+	"github.com/pableeee/processor/pkg/repository"
 )
 
 type Service struct {
@@ -20,22 +22,28 @@ func NewJetService(kubeconfig string) *Service {
 	p := provider.NewInfraProvider(kubeconfig)
 	s.builder = builder.NewBuilder().
 		WithProvider(p).
-		WithLock(lock.NewLocal()).
-		WithKVS(kvs.NewLocal())
+		WithRepository(repository.WithKVS(kvs.NewLocal()))
 
 	return &s
 }
 
 func (j *Service) addHandlers(r *mux.Router) {
 	// handles get games requests
-	r.HandleFunc("/kvs/{kvsID}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["kvsID"]
+	r.HandleFunc("/project/{projID}/kvs/{kvsID}", func(w http.ResponseWriter, r *http.Request) {
+		kvsID := mux.Vars(r)["kvsID"]
+		projID := mux.Vars(r)["projID"]
 
-		svcs := builder.NewBuilder().GetServices()
-
-		b, err := svcs.Get(id)
+		s, err := j.builder.GetService(projID, kvsID, types.KVS)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "Error: %s", err.Error())
+
+			return
+		}
+
+		b, err := json.Marshal(s)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err.Error())
 
 			return
@@ -46,13 +54,28 @@ func (j *Service) addHandlers(r *mux.Router) {
 
 	}).Methods("GET")
 
-	r.HandleFunc("/kvs/", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/project/{projID}/kvs/", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id := vars["kvsID"]
-		svcs := builder.NewBuilder().GetServices()
+		id := vars["projID"]
 
-		b, err := svcs.Get(id)
-		if err != nil {
+		if err := j.builder.
+			BuildKVS(builder.Model{
+				Project: id,
+				Type:    types.KVS,
+			}); err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "Error: %s", err.Error())
+
+			return
+		}
+
+		if err := j.builder.BuildKVS(builder.Model{
+			Project:      id,
+			URL:          "",
+			Repo:         "",
+			ServivceName: "",
+			Type:         types.KVS,
+		}); err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprintf(w, "Error: %s", err.Error())
 
@@ -60,7 +83,10 @@ func (j *Service) addHandlers(r *mux.Router) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, string(b))
+		fmt.Fprint(w, map[string]interface{}{
+			"status": 200,
+			"msg":    fmt.Sprintf("KVS %s created in %s", id, "some name"),
+		})
 
 	}).Methods("POST")
 

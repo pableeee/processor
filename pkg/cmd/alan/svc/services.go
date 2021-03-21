@@ -8,7 +8,7 @@ import (
 	"github.com/pableeee/processor/pkg/k8s/provider"
 	"github.com/pableeee/processor/pkg/k8s/provider/types"
 	"github.com/pableeee/processor/pkg/kvs"
-	"github.com/pableeee/processor/pkg/lock"
+	"github.com/pableeee/processor/pkg/repository"
 	"github.com/spf13/cobra"
 )
 
@@ -76,8 +76,7 @@ func buildCommand(use, example string, f func(b *builder.Builder, m builder.Mode
 			p := provider.NewInfraProvider(kubeconfig)
 			b := builder.NewBuilder().
 				WithProvider(p).
-				WithLock(lock.NewLocal()).
-				WithKVS(kvs.NewLocal())
+				WithRepository(repository.WithKVS(kvs.NewLocal()))
 
 			if err = f(b, builder.Model{
 				Project:      name,
