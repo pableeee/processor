@@ -27,6 +27,22 @@ type repository struct {
 	store kvs.KVS
 }
 
+func WithKVS(store kvs.KVS) Repository {
+	return &repository{store: store}
+}
+
+func (r repository) Delete(id string) error {
+	if len(id) == 0 {
+		return ErrInvalidKey
+	}
+
+	if err := r.store.Del(id); err != nil {
+		return fmt.Errorf("unable to delete %s: %w", id, err)
+	}
+
+	return nil
+}
+
 func (r repository) Get(id string, i interface{}) error {
 	if len(id) == 0 {
 		return ErrInvalidKey
