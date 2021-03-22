@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
 	"syscall"
 
 	"github.com/gorilla/mux"
 	ht "github.com/pableeee/processor/pkg/http"
 	"github.com/pableeee/processor/pkg/kvs"
+	"github.com/pableeee/processor/pkg/osutil"
 	"github.com/pableeee/processor/pkg/repository"
 	rep "github.com/pableeee/processor/pkg/repository"
 )
@@ -40,14 +40,12 @@ func (s *UserService) Start() error {
 		return fmt.Errorf("server not configured")
 	}
 
-	go func() {
-		sc := make(chan os.Signal, 1)
-		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-		<-sc
-		// Close server on SIGINT
-		ctx := context.Background()
-		s.sv.Shutdown(ctx)
-	}()
+	osutil.ExecOn(
+		func() {
+			ctx := context.Background()
+			s.sv.Shutdown(ctx)
+		}, syscall.SIGINT, syscall.SIGTERM, os.Interrupt,
+	)
 
 	if err := s.sv.ListenAndServe(); err != nil {
 		return fmt.Errorf("faild starting server %w", err)
