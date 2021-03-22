@@ -2,3 +2,4 @@
 .vscode/launch.json
 cmd/alan/alan
 cmd/kvs/kvs
+cmd/users/users
