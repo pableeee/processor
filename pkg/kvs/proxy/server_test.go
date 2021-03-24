@@ -257,9 +257,9 @@ func TestServe_Fail(t *testing.T) {
 		lis:    lis,
 	}
 
-	sv.On("Serve", mock.Anything).Return(nil)
-
+	sv.On("Serve", mock.Anything).Return(errors.New("some error"))
 	err := s.Serve()
+
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "failed starting grpc server")
 }
