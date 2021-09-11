@@ -59,11 +59,11 @@ func NewNatsConsumer(address string, port int) (Consumer, error) {
 		return nil, fmt.Errorf("error connecting to nats server %w", err)
 	}
 
-	return &NatsPublisher{conn: nc}, nil
+	return &NatsConsumer{conn: nc}, nil
 }
 
-func (nw *NatsPublisher) Subscribe(topic string, p Pusher) error {
-	_, err := nw.conn.Subscribe(topic, func(msg *nats.Msg) {
+func (nw *NatsConsumer) Subscribe(topic string, p Pusher) error {
+	if _, err := nw.conn.Subscribe(topic, func(msg *nats.Msg) {
 		rsp, er := p.Push(msg.Data)
 		if er != nil {
 			// si falla el procesamiento, no hago el reply
@@ -74,8 +74,7 @@ func (nw *NatsPublisher) Subscribe(topic string, p Pusher) error {
 		if er != nil {
 			log.Println("could not respond to message")
 		}
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("error subscribing to topic %w", err)
 	}
 
