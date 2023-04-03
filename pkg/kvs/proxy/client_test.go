@@ -101,7 +101,7 @@ func TestPut_Ok(t *testing.T) {
 
 	k.On("Put", context.Background(), &kvs.PutRequest{Key: "123456", Value: []byte(`value`)}, par).
 		Return(&kvs.Response{
-			Error: ,
+			Error: "",
 		}, nil)
 
 	b, err := s.Get("123456")
@@ -110,7 +110,7 @@ func TestPut_Ok(t *testing.T) {
 	assert.Equal(t, string(b), "value")
 }
 
-func TestGet_FailLocal(t *testing.T) {
+func TestGet_FailLocal1(t *testing.T) {
 	k := new(mockKVSServiceClient)
 	s := &Client{
 		client: k,
@@ -126,7 +126,7 @@ func TestGet_FailLocal(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed getting key")
 }
 
-func TestGet_FailRemote(t *testing.T) {
+func TestGet_FailRemote2(t *testing.T) {
 	k := new(mockKVSServiceClient)
 	s := &Client{
 		client: k,
